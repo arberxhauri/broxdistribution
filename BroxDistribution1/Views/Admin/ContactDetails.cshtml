@@ -1,0 +1,220 @@
+@model BroxDistribution.Models.ContactForm
+
+@{
+    ViewData["Title"] = "Contact Details";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="mb-4">
+    <div class="d-flex align-items-center gap-3 mb-3">
+        <a asp-action="Contacts" class="btn btn-outline-gold">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h1 class="brand-serif mb-0">Contact Details</h1>
+            <p class="text-muted mb-0">Message from @Model.Name</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="glass-card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h4 class="brand-serif mb-2">@Model.Name</h4>
+                    @if (!string.IsNullOrEmpty(Model.Company))
+                    {
+                        <p class="text-muted mb-1">
+                            <i class="bi bi-building me-2"></i>@Model.Company
+                        </p>
+                    }
+                    <p class="text-muted mb-1">
+                        <i class="bi bi-envelope me-2"></i>
+                        <a href="mailto:@Model.Email">@Model.Email</a>
+                    </p>
+                    @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                    {
+                        <p class="text-muted mb-1">
+                            <i class="bi bi-telephone me-2"></i>
+                            <a href="tel:@Model.PhoneNumber">@Model.PhoneNumber</a>
+                        </p>
+                    }
+                    <p class="small text-muted mb-0">
+                        <i class="bi bi-clock me-2"></i>@Model.SubmittedAt.ToString("MMMM dd, yyyy 'at' hh:mm tt")
+                    </p>
+                </div>
+                <div>
+                    @if (Model.IsReplied)
+                    {
+                        <span class="badge bg-success">Replied</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    }
+                </div>
+            </div>
+
+            <div class="divider-gold"></div>
+
+            @if (!string.IsNullOrEmpty(Model.WineName))
+            {
+                <div class="mb-4">
+                    <h5 class="brand-serif mb-3">Wine Inquiry</h5>
+                    <div style="background: #fff3cd; padding: 20px; border-left: 4px solid var(--warm-gold);">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Wine Name:</strong></p>
+                                <p class="mb-0">@Model.WineName</p>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.WineBrand))
+                            {
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Brand:</strong></p>
+                                    <p class="mb-0">@Model.WineBrand</p>
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.WineCategory))
+                            {
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Category:</strong></p>
+                                    <p class="mb-0">@Model.WineCategory</p>
+                                </div>
+                            }
+                            @if (Model.WineYear.HasValue)
+                            {
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Year:</strong></p>
+                                    <p class="mb-0">@Model.WineYear</p>
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.WineCountry))
+                            {
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Country:</strong></p>
+                                    <p class="mb-0">@Model.WineCountry</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="mb-4">
+                <h5 class="brand-serif mb-3">Message</h5>
+                <div style="background: var(--soft-cream); padding: 25px; border-left: 4px solid var(--warm-gold);">
+                    <p class="mb-0" style="white-space: pre-wrap;">@Model.Description</p>
+                </div>
+            </div>
+
+            @if (Model.IsReplied)
+            {
+                <div class="mb-4">
+                    <h5 class="brand-serif mb-3">Your Reply</h5>
+                    <div style="background: #e8f5e9; padding: 25px; border-left: 4px solid #4caf50;">
+                        <p class="mb-2" style="white-space: pre-wrap;">@Model.ReplyMessage</p>
+                        <small class="text-muted">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Sent on @Model.RepliedAt?.ToString("MMM dd, yyyy 'at' hh:mm tt")
+                        </small>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (!Model.IsReplied)
+        {
+            <div class="glass-card p-4">
+                <h5 class="brand-serif mb-3">Send Reply</h5>
+                <form asp-action="ReplyContact" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Reply Message</label>
+                        <textarea name="replyMessage" class="form-control" rows="8" placeholder="Type your response here..." required></textarea>
+                        <small class="text-muted">This will be sent to @Model.Email</small>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-wine">
+                            <i class="bi bi-send me-2"></i>Send Reply
+                        </button>
+                        <a asp-action="Contacts" class="btn btn-outline-gold">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-4">
+        <div class="glass-card p-4 mb-3">
+            <h5 class="brand-serif mb-3">Actions</h5>
+            <div class="d-flex flex-column gap-2">
+                <a href="mailto:@Model.Email" class="btn btn-outline-gold w-100">
+                    <i class="bi bi-envelope me-2"></i>Email Directly
+                </a>
+                @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                {
+                    <a href="tel:@Model.PhoneNumber" class="btn btn-outline-gold w-100">
+                        <i class="bi bi-telephone me-2"></i>Call
+                    </a>
+                }
+                <form asp-action="DeleteContact" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Are you sure?');">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-danger w-100">
+                        <i class="bi bi-trash me-2"></i>Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="glass-card p-4 mb-3">
+            <h5 class="brand-serif mb-3">Contact Info</h5>
+            <ul class="list-unstyled small mb-0">
+                <li class="mb-2">
+                    <strong>Name:</strong><br>
+                    @Model.Name
+                </li>
+                @if (!string.IsNullOrEmpty(Model.Company))
+                {
+                    <li class="mb-2">
+                        <strong>Company:</strong><br>
+                        @Model.Company
+                    </li>
+                }
+                <li class="mb-2">
+                    <strong>Email:</strong><br>
+                    <a href="mailto:@Model.Email">@Model.Email</a>
+                </li>
+                @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                {
+                    <li class="mb-2">
+                        <strong>Phone:</strong><br>
+                        <a href="tel:@Model.PhoneNumber">@Model.PhoneNumber</a>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <div class="glass-card p-4">
+            <h5 class="brand-serif mb-3">Status</h5>
+            <ul class="list-unstyled small">
+                <li class="mb-2">
+                    <i class="bi bi-check-circle me-2 @(Model.IsRead ? "text-success" : "text-muted")"></i>
+                    @(Model.IsRead ? "Read" : "Unread")
+                </li>
+                <li class="mb-2">
+                    <i class="bi bi-reply me-2 @(Model.IsReplied ? "text-success" : "text-muted")"></i>
+                    @(Model.IsReplied ? "Replied" : "No reply yet")
+                </li>
+                <li>
+                    <i class="bi bi-hash me-2 text-muted"></i>
+                    ID: @Model.Id
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

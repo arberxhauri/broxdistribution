@@ -1,0 +1,101 @@
+@model dynamic
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="mb-4">
+    <h1 class="brand-serif">Dashboard</h1>
+    <p class="text-muted">Welcome back, @User.Identity.Name</p>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <p class="text-muted small mb-1">TOTAL WINES</p>
+                    <h2 class="brand-serif mb-0">@Model.TotalWines</h2>
+                </div>
+                <div style="width: 60px; height: 60px; background: var(--soft-cream); display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-cup-straw fs-2" style="color: var(--warm-gold);"></i>
+                </div>
+            </div>
+            <div class="d-flex gap-3 small">
+                <span class="text-success"><i class="bi bi-check-circle me-1"></i>@Model.ActiveWines Active</span>
+                <span class="text-danger"><i class="bi bi-trash me-1"></i>@Model.DeletedWines Deleted</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <p class="text-muted small mb-1">CONTACT FORMS</p>
+                    <h2 class="brand-serif mb-0">@Model.TotalContacts</h2>
+                </div>
+                <div style="width: 60px; height: 60px; background: var(--soft-cream); display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-envelope fs-2" style="color: var(--warm-gold);"></i>
+                </div>
+            </div>
+            <div class="d-flex gap-3 small">
+                <span class="text-warning"><i class="bi bi-envelope me-1"></i>@Model.UnreadContacts Unread</span>
+                <span class="text-success"><i class="bi bi-reply me-1"></i>@Model.RepliedContacts Replied</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <p class="text-muted small mb-1">QUICK ACTIONS</p>
+                    <h2 class="brand-serif mb-0">Manage</h2>
+                </div>
+                <div style="width: 60px; height: 60px; background: var(--soft-cream); display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-gear fs-2" style="color: var(--warm-gold);"></i>
+                </div>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <a asp-action="CreateWine" class="btn btn-outline-gold btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i>Add Wine
+                </a>
+                <a asp-action="Contacts" class="btn btn-outline-gold btn-sm">
+                    <i class="bi bi-envelope me-1"></i>View Messages
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12">
+        <div class="glass-card p-4">
+            <h4 class="brand-serif mb-3">Quick Links</h4>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <a asp-action="Wines" class="btn btn-wine w-100">
+                        <i class="bi bi-grid-3x3-gap me-2"></i>All Wines
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a asp-action="Wines" asp-route-showDeleted="true" class="btn btn-outline-gold w-100">
+                        <i class="bi bi-trash me-2"></i>Deleted Wines
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a asp-action="Contacts" class="btn btn-wine w-100">
+                        <i class="bi bi-chat-dots me-2"></i>All Contacts
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a asp-controller="Home" asp-action="Index" target="_blank" class="btn btn-outline-gold w-100">
+                        <i class="bi bi-box-arrow-up-right me-2"></i>View Website
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Brox Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.12.0/font/bootstrap-icons.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="~/css/site.css" />
+    <style>
+        /* Mobile Menu Button */
+        .mobile-menu-toggle {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1100;
+            background: var(--deep-charcoal);
+            color: var(--pure-white);
+            border: none;
+            padding: 12px 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+
+        .mobile-menu-toggle:hover {
+            background: var(--warm-gold);
+            color: var(--deep-charcoal);
+        }
+
+        /* Sidebar */
+        .admin-sidebar {
+            min-height: 100vh;
+            background: var(--deep-charcoal);
+            color: var(--pure-white);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            padding: 2rem 0;
+            z-index: 1050;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .admin-content {
+            margin-left: 250px;
+            padding: 2rem;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar-brand {
+            padding: 0 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-menu li a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .sidebar-menu li a i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+            color: var(--warm-gold);
+            min-width: 20px;
+        }
+
+        .sidebar-menu li a:hover,
+        .sidebar-menu li a.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--pure-white);
+        }
+
+        .sidebar-menu li a.active {
+            border-left: 3px solid var(--warm-gold);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1040;
+        }
+
+        /* Mobile Styles */
+        @@media (max-width: 992px) {
+        .mobile-menu-toggle {
+            display: block;
+        }
+
+        .admin-sidebar {
+            transform: translateX(-100%);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .admin-sidebar.show {
+            transform: translateX(0);
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        .admin-content {
+            margin-left: 0;
+            padding: 5rem 1rem 2rem;
+        }
+
+        .sidebar-brand h3 {
+            font-size: 1.3rem;
+        }
+
+        .sidebar-menu li a {
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+        }
+        }
+
+        @@media (max-width: 576px) {
+        .admin-content {
+            padding: 5rem 1rem 1rem;
+        }
+
+        .admin-sidebar {
+            width: 280px;
+        }
+        }
+
+        /* User info box */
+        .user-info-box {
+            margin: 1.5rem 1.5rem 0;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+<!-- Mobile Menu Toggle -->
+<button class="mobile-menu-toggle" id="mobileMenuToggle">
+    <i class="bi bi-list"></i>
+</button>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Admin Sidebar -->
+<div class="admin-sidebar" id="adminSidebar">
+    <div class="sidebar-brand">
+        <h3 class="brand-serif text-center" style="color: var(--warm-gold); font-size: 1.5rem;">
+            <img style="width: 150px;" src="/lib/Images/white-logo.png" alt="Brox Distribution Logo"/>
+        </h3>
+        <p class="text-center small mb-0" style="color: rgba(255, 255, 255, 0.5);">Admin Panel</p>
+    </div>
+
+
+    <ul class="sidebar-menu">
+        <li>
+            <a asp-controller="Admin" asp-action="Dashboard" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+        </li>
+        <li>
+            <a asp-controller="Admin" asp-action="Wines" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Wines" || ViewContext.RouteData.Values["action"]?.ToString() == "CreateWine" || ViewContext.RouteData.Values["action"]?.ToString() == "EditWine" ? "active" : "")">
+                <i class="bi bi-cup-straw"></i> Wine Management
+            </a>
+        </li>
+        <li>
+            <a asp-controller="Admin" asp-action="Contacts" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Contacts" || ViewContext.RouteData.Values["action"]?.ToString() == "ContactDetails" ? "active" : "")">
+                <i class="bi bi-envelope"></i> Contact Forms
+            </a>
+        </li>
+        <li>
+            <a asp-controller="Home" asp-action="Index" target="_blank">
+                <i class="bi bi-box-arrow-up-right"></i> View Website
+            </a>
+        </li>
+        <li>
+            <a asp-controller="Admin" asp-action="Logout" style="color: #ff6b6b;">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </li>
+    </ul>
+
+    <div class="user-info-box">
+        <p class="small mb-1" style="color: rgba(255, 255, 255, 0.5);">Logged in as:</p>
+        <p class="mb-0" style="color: var(--warm-gold); font-weight: 600;">@User.Identity.Name</p>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="admin-content">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @RenderBody()
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Mobile menu toggle
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const adminSidebar = document.getElementById('adminSidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    function toggleSidebar() {
+        adminSidebar.classList.toggle('show');
+        sidebarOverlay.classList.toggle('show');
+
+        // Toggle icon
+        const icon = mobileMenuToggle.querySelector('i');
+        if (adminSidebar.classList.contains('show')) {
+            icon.classList.remove('bi-list');
+            icon.classList.add('bi-x');
+        } else {
+            icon.classList.remove('bi-x');
+            icon.classList.add('bi-list');
+        }
+    }
+
+    mobileMenuToggle.addEventListener('click', toggleSidebar);
+    sidebarOverlay.addEventListener('click', toggleSidebar);
+
+    // Close sidebar when clicking a link (mobile only)
+    if (window.innerWidth <= 992) {
+        document.querySelectorAll('.sidebar-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (adminSidebar.classList.contains('show')) {
+                    toggleSidebar();
+                }
+            });
+        });
+    }
+
+    // Handle window resize
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (window.innerWidth > 992) {
+                adminSidebar.classList.remove('show');
+                sidebarOverlay.classList.remove('show');
+                const icon = mobileMenuToggle.querySelector('i');
+                icon.classList.remove('bi-x');
+                icon.classList.add('bi-list');
+            }
+        }, 250);
+    });
+</script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,525 @@
+@model IEnumerable<BroxDistribution.Models.Wine>
+
+@{
+    ViewData["Title"] = ViewBag.ShowDeleted ? "Deleted Wines" : "Wine Management";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var sortBy = ViewBag.SortBy as string ?? "Name";
+    var sortOrder = ViewBag.SortOrder as string ?? "asc";
+    var currentPage = (int)ViewBag.CurrentPage;
+    var pageSize = (int)ViewBag.PageSize;
+    var totalPages = (int)ViewBag.TotalPages;
+    var totalItems = (int)ViewBag.TotalItems;
+    var showDeleted = (bool)ViewBag.ShowDeleted;
+    var search = ViewBag.Search as string ?? "";
+    var category = ViewBag.Category as string ?? "";
+    var categories = ViewBag.Categories as List<string> ?? new List<string>();
+}
+
+@functions {
+    string GetSortIcon(string column, string currentSortBy, string currentSortOrder)
+    {
+        if (currentSortBy != column) return "bi-arrow-down-up";
+        return currentSortOrder == "asc" ? "bi-arrow-up" : "bi-arrow-down";
+    }
+
+    string GetNextSortOrder(string column, string currentSortBy, string currentSortOrder)
+    {
+        if (currentSortBy != column) return "asc";
+        return currentSortOrder == "asc" ? "desc" : "asc";
+    }
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h1 class="brand-serif mb-1">@ViewData["Title"]</h1>
+        <p class="text-muted mb-0">
+            @if (totalItems > 0)
+            {
+                <text>Showing @((currentPage - 1) * pageSize + 1) - @Math.Min(currentPage * pageSize, totalItems) of @totalItems wines</text>
+            }
+            else
+            {
+                <text>No wines found</text>
+            }
+        </p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        @if (showDeleted)
+        {
+            <a asp-action="Wines" class="btn btn-outline-gold">
+                <i class="bi bi-arrow-left me-2"></i>Back to Active Wines
+            </a>
+        }
+        else
+        {
+            <a asp-action="Wines" asp-route-showDeleted="true" class="btn btn-outline-gold">
+                <i class="bi bi-trash me-2"></i>View Deleted
+            </a>
+            <a asp-action="CreateWine" class="btn btn-wine">
+                <i class="bi bi-plus-circle me-2"></i>Add New Wine
+            </a>
+        }
+    </div>
+</div>
+
+<!-- Search and Filter Section -->
+<div class="glass-card p-3 mb-3">
+    <form method="get" asp-action="Wines">
+        <input type="hidden" name="showDeleted" value="@showDeleted" />
+        <input type="hidden" name="sortBy" value="@sortBy" />
+        <input type="hidden" name="sortOrder" value="@sortOrder" />
+        <input type="hidden" name="pageSize" value="@pageSize" />
+        
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-5 col-md-6">
+                <label class="form-label small text-muted mb-1">SEARCH BY NAME OR BRAND</label>
+                <div class="input-group">
+                    <span class="input-group-text" style="background: var(--soft-cream); border-color: var(--light-gray);">
+                        <i class="bi bi-search" style="color: var(--warm-gold);"></i>
+                    </span>
+                    <input type="text" 
+                           name="search" 
+                           value="@search" 
+                           class="form-control" 
+                           placeholder="Search wines..." />
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label small text-muted mb-1">FILTER BY CATEGORY</label>
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    @foreach (var cat in categories)
+                    {
+                        @if (cat == category)
+                        {
+                            <option value="@cat" selected>@cat</option>
+                        }
+                        else
+                        {
+                            <option value="@cat">@cat</option>
+                        }
+                    }
+                </select>
+            </div>
+            
+            <div class="col-lg-4 col-md-12">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-wine flex-fill">
+                        <i class="bi bi-funnel me-2"></i>Apply Filters
+                    </button>
+                    @if (!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(category))
+                    {
+                        <a asp-action="Wines" 
+                           asp-route-showDeleted="@showDeleted"
+                           asp-route-sortBy="@sortBy"
+                           asp-route-sortOrder="@sortOrder"
+                           asp-route-pageSize="@pageSize"
+                           class="btn btn-outline-gold">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(category))
+        {
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="bi bi-filter-circle me-1" style="color: var(--warm-gold);"></i>
+                    Active filters:
+                    @if (!string.IsNullOrEmpty(search))
+                    {
+                        <span class="badge bg-secondary ms-1">Search: @search</span>
+                    }
+                    @if (!string.IsNullOrEmpty(category))
+                    {
+                        <span class="badge bg-secondary ms-1">Category: @category</span>
+                    }
+                </small>
+            </div>
+        }
+    </form>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="glass-card p-5 text-center">
+        <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+        <h3 class="brand-serif mb-2">No Wines Found</h3>
+        <p class="text-muted mb-4">
+            @if (!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(category))
+            {
+                <span>No wines match your search criteria. Try adjusting your filters.</span>
+            }
+            else if (showDeleted)
+            {
+                <span>No deleted wines</span>
+            }
+            else
+            {
+                <span>Start by adding your first wine</span>
+            }
+        </p>
+        @if (!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(category))
+        {
+            <a asp-action="Wines" 
+               asp-route-showDeleted="@showDeleted"
+               asp-route-pageSize="@pageSize"
+               class="btn btn-outline-gold">
+                <i class="bi bi-x-circle me-2"></i>Clear Filters
+            </a>
+        }
+        else if (!showDeleted)
+        {
+            <a asp-action="CreateWine" class="btn btn-wine">
+                <i class="bi bi-plus-circle me-2"></i>Add Wine
+            </a>
+        }
+    </div>
+}
+else
+{
+    <!-- Page Size Selector -->
+    <div class="glass-card p-3 mb-3">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center gap-2">
+                    <label class="text-muted small mb-0">Show:</label>
+                    <select class="form-select form-select-sm" style="width: auto;" onchange="changePageSize(this.value)">
+                        <option value="10" selected="@(pageSize == 10)">10</option>
+                        <option value="25" selected="@(pageSize == 25)">25</option>
+                        <option value="50" selected="@(pageSize == 50)">50</option>
+                        <option value="100" selected="@(pageSize == 100)">100</option>
+                    </select>
+                    <span class="text-muted small">per page</span>
+                </div>
+            </div>
+            <div class="col-md-6 text-md-end mt-2 mt-md-0">
+                <span class="badge" style="background: var(--warm-gold); color: var(--deep-charcoal); padding: 8px 12px;">
+                    Total: @totalItems wines
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background: var(--soft-cream);">
+                    <tr>
+                        <th style="width: 80px;">Image</th>
+                        <th>
+                            <a asp-action="Wines" 
+                               asp-route-showDeleted="@showDeleted" 
+                               asp-route-sortBy="Name" 
+                               asp-route-sortOrder="@GetNextSortOrder("Name", sortBy, sortOrder)"
+                               asp-route-page="1"
+                               asp-route-pageSize="@pageSize"
+                               asp-route-search="@search"
+                               asp-route-category="@category"
+                               class="text-decoration-none text-dark d-flex align-items-center gap-2"
+                               style="cursor: pointer;">
+                                Name
+                                <i class="bi @GetSortIcon("Name", sortBy, sortOrder)" style="color: var(--warm-gold);"></i>
+                            </a>
+                        </th>
+                        <th>
+                            <a asp-action="Wines" 
+                               asp-route-showDeleted="@showDeleted" 
+                               asp-route-sortBy="Brand" 
+                               asp-route-sortOrder="@GetNextSortOrder("Brand", sortBy, sortOrder)"
+                               asp-route-page="1"
+                               asp-route-pageSize="@pageSize"
+                               asp-route-search="@search"
+                               asp-route-category="@category"
+                               class="text-decoration-none text-dark d-flex align-items-center gap-2"
+                               style="cursor: pointer;">
+                                Brand
+                                <i class="bi @GetSortIcon("Brand", sortBy, sortOrder)" style="color: var(--warm-gold);"></i>
+                            </a>
+                        </th>
+                        <th>
+                            <a asp-action="Wines" 
+                               asp-route-showDeleted="@showDeleted" 
+                               asp-route-sortBy="Category" 
+                               asp-route-sortOrder="@GetNextSortOrder("Category", sortBy, sortOrder)"
+                               asp-route-page="1"
+                               asp-route-pageSize="@pageSize"
+                               asp-route-search="@search"
+                               asp-route-category="@category"
+                               class="text-decoration-none text-dark d-flex align-items-center gap-2"
+                               style="cursor: pointer;">
+                                Category
+                                <i class="bi @GetSortIcon("Category", sortBy, sortOrder)" style="color: var(--warm-gold);"></i>
+                            </a>
+                        </th>
+                        <th>
+                            <a asp-action="Wines" 
+                               asp-route-showDeleted="@showDeleted" 
+                               asp-route-sortBy="Country" 
+                               asp-route-sortOrder="@GetNextSortOrder("Country", sortBy, sortOrder)"
+                               asp-route-page="1"
+                               asp-route-pageSize="@pageSize"
+                               asp-route-search="@search"
+                               asp-route-category="@category"
+                               class="text-decoration-none text-dark d-flex align-items-center gap-2"
+                               style="cursor: pointer;">
+                                Country
+                                <i class="bi @GetSortIcon("Country", sortBy, sortOrder)" style="color: var(--warm-gold);"></i>
+                            </a>
+                        </th>
+                        <th>
+                            <a asp-action="Wines" 
+                               asp-route-showDeleted="@showDeleted" 
+                               asp-route-sortBy="Year" 
+                               asp-route-sortOrder="@GetNextSortOrder("Year", sortBy, sortOrder)"
+                               asp-route-page="1"
+                               asp-route-pageSize="@pageSize"
+                               asp-route-search="@search"
+                               asp-route-category="@category"
+                               class="text-decoration-none text-dark d-flex align-items-center gap-2"
+                               style="cursor: pointer;">
+                                Year
+                                <i class="bi @GetSortIcon("Year", sortBy, sortOrder)" style="color: var(--warm-gold);"></i>
+                            </a>
+                        </th>
+                        <th>
+                            <a asp-action="Wines" 
+                               asp-route-showDeleted="@showDeleted" 
+                               asp-route-sortBy="Price" 
+                               asp-route-sortOrder="@GetNextSortOrder("Price", sortBy, sortOrder)"
+                               asp-route-page="1"
+                               asp-route-pageSize="@pageSize"
+                               asp-route-search="@search"
+                               asp-route-category="@category"
+                               class="text-decoration-none text-dark d-flex align-items-center gap-2"
+                               style="cursor: pointer;">
+                                Price
+                                <i class="bi @GetSortIcon("Price", sortBy, sortOrder)" style="color: var(--warm-gold);"></i>
+                            </a>
+                        </th>
+                        <th style="width: 150px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var wine in Model)
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrEmpty(wine.ImageUrl))
+                                {
+                                    <img src="@wine.ImageUrl" alt="@wine.Name" style="width: 60px; height: 80px; object-fit: contain; background: white; padding: 5px; border: 1px solid var(--light-gray);" />
+                                }
+                                else
+                                {
+                                    <div style="width: 60px; height: 80px; background: var(--soft-cream); display: flex; align-items: center; justify-content: center; border: 1px solid var(--light-gray);">
+                                        <i class="bi bi-wine-glass text-muted"></i>
+                                    </div>
+                                }
+                            </td>
+                            <td><strong>@wine.Name</strong></td>
+                            <td>@wine.Brand</td>
+                            <td><span class="badge badge-wine">@wine.Category</span></td>
+                            <td>@wine.Country</td>
+                            <td>@wine.Year</td>
+                            <td><strong>€@wine.Price.ToString("0.00")</strong></td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    @if (!showDeleted)
+                                    {
+                                        <a asp-action="EditWine" asp-route-id="@wine.Id" class="btn btn-sm btn-outline-gold" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form asp-action="DeleteWine" asp-route-id="@wine.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this wine?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="RestoreWine" asp-route-id="@wine.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-success" title="Restore">
+                                                <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages > 1)
+    {
+        <div class="glass-card p-3 mt-3">
+            <nav>
+                <ul class="pagination pagination-sm mb-0 justify-content-center">
+                    <!-- First Page -->
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" 
+                           asp-action="Wines" 
+                           asp-route-showDeleted="@showDeleted" 
+                           asp-route-sortBy="@sortBy" 
+                           asp-route-sortOrder="@sortOrder"
+                           asp-route-page="1"
+                           asp-route-pageSize="@pageSize"
+                           asp-route-search="@search"
+                           asp-route-category="@category">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+
+                    <!-- Previous Page -->
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" 
+                           asp-action="Wines" 
+                           asp-route-showDeleted="@showDeleted" 
+                           asp-route-sortBy="@sortBy" 
+                           asp-route-sortOrder="@sortOrder"
+                           asp-route-page="@(currentPage - 1)"
+                           asp-route-pageSize="@pageSize"
+                           asp-route-search="@search"
+                           asp-route-category="@category">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+
+                    @{
+                        var startPage = Math.Max(1, currentPage - 2);
+                        var endPage = Math.Min(totalPages, currentPage + 2);
+
+                        if (startPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" 
+                                   asp-action="Wines" 
+                                   asp-route-showDeleted="@showDeleted" 
+                                   asp-route-sortBy="@sortBy" 
+                                   asp-route-sortOrder="@sortOrder"
+                                   asp-route-page="1"
+                                   asp-route-pageSize="@pageSize"
+                                   asp-route-search="@search"
+                                   asp-route-category="@category">1</a>
+                            </li>
+                            if (startPage > 2)
+                            {
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            }
+                        }
+
+                        for (var i = startPage; i <= endPage; i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" 
+                                   asp-action="Wines" 
+                                   asp-route-showDeleted="@showDeleted" 
+                                   asp-route-sortBy="@sortBy" 
+                                   asp-route-sortOrder="@sortOrder"
+                                   asp-route-page="@i"
+                                   asp-route-pageSize="@pageSize"
+                                   asp-route-search="@search"
+                                   asp-route-category="@category">@i</a>
+                            </li>
+                        }
+
+                        if (endPage < totalPages)
+                        {
+                            if (endPage < totalPages - 1)
+                            {
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            }
+                            <li class="page-item">
+                                <a class="page-link" 
+                                   asp-action="Wines" 
+                                   asp-route-showDeleted="@showDeleted" 
+                                   asp-route-sortBy="@sortBy" 
+                                   asp-route-sortOrder="@sortOrder"
+                                   asp-route-page="@totalPages"
+                                   asp-route-pageSize="@pageSize"
+                                   asp-route-search="@search"
+                                   asp-route-category="@category">@totalPages</a>
+                            </li>
+                        }
+                    }
+
+                    <!-- Next Page -->
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" 
+                           asp-action="Wines" 
+                           asp-route-showDeleted="@showDeleted" 
+                           asp-route-sortBy="@sortBy" 
+                           asp-route-sortOrder="@sortOrder"
+                           asp-route-page="@(currentPage + 1)"
+                           asp-route-pageSize="@pageSize"
+                           asp-route-search="@search"
+                           asp-route-category="@category">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+
+                    <!-- Last Page -->
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" 
+                           asp-action="Wines" 
+                           asp-route-showDeleted="@showDeleted" 
+                           asp-route-sortBy="@sortBy" 
+                           asp-route-sortOrder="@sortOrder"
+                           asp-route-page="@totalPages"
+                           asp-route-pageSize="@pageSize"
+                           asp-route-search="@search"
+                           asp-route-category="@category">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+}
+
+<script>
+    function changePageSize(newSize) {
+        var url = new URL(window.location.href);
+        url.searchParams.set('pageSize', newSize);
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+    }
+</script>
+
+<style>
+    .pagination .page-link {
+        color: var(--deep-charcoal);
+        border-color: var(--light-gray);
+    }
+    
+    .pagination .page-link:hover {
+        background: var(--soft-cream);
+        color: var(--warm-gold);
+        border-color: var(--warm-gold);
+    }
+    
+    .pagination .page-item.active .page-link {
+        background: var(--deep-charcoal);
+        border-color: var(--deep-charcoal);
+        color: white;
+    }
+    
+    .pagination .page-item.disabled .page-link {
+        background: var(--soft-cream);
+        color: #999;
+    }
+    
+    thead th a:hover {
+        color: var(--warm-gold) !important;
+    }
+</style>

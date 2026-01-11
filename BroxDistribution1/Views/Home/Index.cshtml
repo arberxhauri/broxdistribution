@@ -1,0 +1,94 @@
+﻿@{
+    ViewData["Title"] = "Brox Distribution";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Hero Section -->
+<section class="hero-wine">
+    <div class="container">
+        <div class="row align-items-center" style="min-height: 85vh;">
+            <div class="col-lg-10 mx-auto text-center">
+                <div class="mb-5" style="animation: fadeInUp 0.8s ease-out;">
+                    <span style="background: rgba(201, 169, 97, 0.15); color: var(--pure-white); padding: 10px 24px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.15em; border: 1px solid rgba(201, 169, 97, 0.3); display: inline-block;">
+                        PREMIUM WINE DISTRIBUTION
+                    </span>
+                </div>
+
+                <h1 style="animation: fadeInUp 0.8s ease-out 0.1s backwards; font-size: 5rem; margin-bottom: 40px;">
+                    Delivered with Care<br/>
+                    <span class="text-gradient">Poured with Intention</span>
+                </h1>
+
+                <p class="lead mx-auto" style="max-width: 600px; font-size: 1.25rem; margin-bottom: 60px; animation: fadeInUp 0.8s ease-out 0.2s backwards;">
+                    A bottle is not just wine. It's the taste of time, place and purpose. We move more than wine-we move moments, memory and meaning.
+                </p>
+
+                <div class="d-flex flex-column flex-sm-row gap-4 justify-content-center" style="animation: fadeInUp 0.8s ease-out 0.3s backwards;">
+                    <a asp-controller="Products" asp-action="Index" class="btn btn-wine btn-lg" style="padding: 20px 50px;">
+                        <span>View Collection</span>
+                    </a>
+                    <a asp-controller="Home" asp-action="Contact" class="btn btn-outline-primary btn-lg" style="border-color: rgba(255,255,255,0.4); color: var(--pure-white); padding: 20px 50px;">
+                        <span>Contact Us</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section style="padding: 120px 0; background: var(--soft-cream);">
+    <div class="container">
+        <div class="text-center mb-5 pb-5">
+            <h2 class="section-title" style="font-size: 3.5rem;">Our Services</h2>
+        </div>
+
+        <div class="row g-5">
+            <div class="col-md-4">
+                <div class="service-card scroll-reveal">
+                    <div class="service-icon">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <h4>HoReCa</h4>
+                    <p>Specialized wine programs for hotels, restaurants, and cafés with dedicated account management.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="service-card scroll-reveal">
+                    <div class="service-icon">
+                        <i class="bi bi-shop-window"></i>
+                    </div>
+                    <h4>Retail</h4>
+                    <p>Premium selection and competitive wholesale pricing for discerning retail partners.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="service-card scroll-reveal">
+                    <div class="service-icon">
+                        <i class="bi bi-truck"></i>
+                    </div>
+                    <h4>Logistics</h4>
+                    <p>Climate-controlled storage and rapid delivery across UK with meticulous care.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Simple CTA Section -->
+<section style="padding: 120px 0; background: var(--pure-white);">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h2 class="section-title" style="font-size: 3.5rem; margin-bottom: 30px;">Partner With Us</h2>
+                <p class="section-subtitle" style="font-size: 1.15rem; margin-bottom: 50px;">
+                    Join Albania's leading establishments in elevating their wine experience
+                </p>
+                <a asp-controller="Home" asp-action="Contact" class="btn btn-wine btn-lg" style="padding: 20px 50px;">
+                    <span>Get Started</span>
+                    <i class="bi bi-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

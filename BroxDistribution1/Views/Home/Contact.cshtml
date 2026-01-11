@@ -1,0 +1,186 @@
+@model BroxDistribution.Models.ContactForm
+
+@{
+    ViewData["Title"] = "Contact Us";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var hasWineInfo = !string.IsNullOrEmpty(Model?.WineName);
+}
+
+<!-- Contact Hero -->
+<section class="contact-hero">
+    <div class="container">
+        <div class="text-center">
+            <h1 style="font-size: 4rem; font-weight: 400; margin-bottom: 20px;" class="brand-serif">
+                @if (hasWineInfo)
+                {
+                    <text>Request a Quote</text>
+                }
+                else
+                {
+                    <text>Get in Touch</text>
+                }
+            </h1>
+            <p class="lead text-muted" style="max-width: 600px; margin: 0 auto;">
+                @if (hasWineInfo)
+                {
+                    <text>Complete the form below and we'll respond with pricing and availability</text>
+                }
+                else
+                {
+                    <text>We're here to assist with your wine selection and distribution needs</text>
+                }
+            </p>
+        </div>
+    </div>
+</section>
+
+<div class="container" style="padding: 60px 0 100px;">
+    <div class="row g-5">
+        <!-- Contact Form -->
+        <div class="col-lg-7">
+            @if (hasWineInfo)
+            {
+                <div class="alert" style="background: var(--soft-cream); border: 1px solid var(--warm-gold); border-left: 4px solid var(--warm-gold); padding: 20px; margin-bottom: 30px;">
+                    <h5 style="color: var(--deep-charcoal); margin-bottom: 15px; font-weight: 600;">
+                        <i class="bi bi-wine-glass me-2" style="color: var(--warm-gold);"></i>Wine Inquiry
+                    </h5>
+                    <div style="color: var(--warm-gray); font-size: 0.95rem; line-height: 1.8;">
+                        <strong style="color: var(--deep-charcoal);">@Model.WineName</strong><br/>
+                        @if (!string.IsNullOrEmpty(Model.WineBrand))
+                        {
+                            <span>Producer: @Model.WineBrand</span><br/>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.WineCategory))
+                        {
+                            <span>Category: @Model.WineCategory</span><br/>
+                        }
+                        @if (Model.WineYear.HasValue)
+                        {
+                            <span>Vintage: @Model.WineYear</span><br/>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.WineCountry))
+                        {
+                            <span>Origin: @Model.WineCountry</span>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="glass-card p-5">
+                <form asp-action="Contact" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <!-- Hidden fields for wine information -->
+                    @if (hasWineInfo)
+                    {
+                        <input type="hidden" asp-for="WineName" />
+                        <input type="hidden" asp-for="WineBrand" />
+                        <input type="hidden" asp-for="WineCategory" />
+                        <input type="hidden" asp-for="WineYear" />
+                        <input type="hidden" asp-for="WineCountry" />
+                    }
+
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label asp-for="Name" class="form-label">
+                                <i class="bi bi-person me-2"></i>Full Name
+                            </label>
+                            <input asp-for="Name" class="form-control" placeholder="Your name" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label">
+                                <i class="bi bi-envelope me-2"></i>Email Address
+                            </label>
+                            <input asp-for="Email" class="form-control" placeholder="your@email.com" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label">
+                                <i class="bi bi-telephone me-2"></i>Phone Number
+                            </label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="+44" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Company" class="form-label">
+                                <i class="bi bi-building me-2"></i>Company Name
+                            </label>
+                            <input asp-for="Company" class="form-control" placeholder="Optional" />
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label">
+                                <i class="bi bi-chat-dots me-2"></i>Message
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="8" placeholder="Tell us about your requirements..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-wine btn-lg w-100">
+                                <i class="bi bi-send me-2"></i>Send Message
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="col-lg-5">
+            <div class="glass-card p-5 mb-4">
+                <div class="text-center mb-4">
+                    <div class="icon-box-large mx-auto mb-4">
+                        <i class="bi bi-geo-alt"></i>
+                    </div>
+                    <h3 class="brand-serif mb-4" style="font-size: 2.2rem; font-weight: 400;">Visit Us</h3>
+                </div>
+
+                <div class="contact-info-item">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <div>
+                        <div class="fw-semibold mb-1" style="color: var(--deep-charcoal);">Address</div>
+                        <div class="small text-muted">London, England</div>
+                    </div>
+                </div>
+
+                <div class="contact-info-item">
+                    <i class="bi bi-envelope-fill"></i>
+                    <div>
+                        <div class="fw-semibold mb-1" style="color: var(--deep-charcoal);">Email</div>
+                        <div class="small text-muted">info@broxdistribution.com</div>
+                    </div>
+                </div>
+
+                <div class="contact-info-item">
+                    <i class="bi bi-telephone-fill"></i>
+                    <div>
+                        <div class="fw-semibold mb-1" style="color: var(--deep-charcoal);">Phone</div>
+                        <div class="small text-muted">+44 XX XXX XXX</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-5">
+                <h4 class="brand-serif mb-4" style="font-size: 1.8rem; font-weight: 400;">Business Hours</h4>
+                <div class="hours-item">
+                    <span style="font-weight: 600;">Monday - Friday</span>
+                    <span class="text-muted">9:00 AM - 6:00 PM</span>
+                </div>
+                <div class="hours-item">
+                    <span style="font-weight: 600;">Saturday</span>
+                    <span class="text-muted">10:00 AM - 2:00 PM</span>
+                </div>
+                <div class="hours-item">
+                    <span style="font-weight: 600;">Sunday</span>
+                    <span class="text-muted">Closed</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

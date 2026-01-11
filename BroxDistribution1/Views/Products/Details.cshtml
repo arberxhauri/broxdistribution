@@ -1,0 +1,124 @@
+@model BroxDistribution.Models.Wine
+
+@{
+    ViewData["Title"] = Model?.Name ?? "Wine Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container" style="padding: 60px 0 100px;">
+    <a asp-action="Index" class="btn btn-outline-gold mb-4">
+        <i class="bi bi-arrow-left me-2"></i>Back to Portfolio
+    </a>
+
+    <div class="row g-5">
+        <!-- Image Section -->
+        <div class="col-lg-5">
+            <div class="product-image-wrapper">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img src="@Model.ImageUrl" class="product-image" alt="@Model.Name" />
+                }
+                else
+                {
+                    <div class="product-image-placeholder">
+                        <i class="bi bi-wine-glass"></i>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Details Section -->
+        <div class="col-lg-7">
+            <div class="glass-card p-5">
+                <!-- Badges -->
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    @if (!string.IsNullOrEmpty(Model.Category))
+                    {
+                        <span class="badge badge-gold px-3 py-2" style="font-size: 0.8rem;">
+                            <i class="bi bi-tag me-1"></i>@Model.Category
+                        </span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Country))
+                    {
+                        <span class="badge badge-wine px-3 py-2" style="font-size: 0.8rem;">
+                            <i class="bi bi-geo-alt me-1"></i>@Model.Country
+                        </span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Region))
+                    {
+                        <span class="badge badge-wine px-3 py-2" style="font-size: 0.8rem;">@Model.Region</span>
+                    }
+                </div>
+
+                <!-- Title -->
+                <h1 class="display-4 brand-serif mb-2" style="font-weight: 400;">@Model.Name</h1>
+                <p class="fs-4 text-muted mb-4" style="font-weight: 400;">@Model.Brand</p>
+
+                <!-- Specifications Grid -->
+                <div class="row g-3 mb-5">
+                    <div class="col-md-6">
+                        <div class="spec-card">
+                            <div class="spec-label">
+                                <i class="bi bi-droplet"></i>Grape Variety
+                            </div>
+                            <div class="spec-value">
+                                @(!string.IsNullOrEmpty(Model.Grape) ? Model.Grape : "N/A")
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="spec-card">
+                            <div class="spec-label">
+                                <i class="bi bi-calendar3"></i>Vintage
+                            </div>
+                            <div class="spec-value">
+                                @(Model.Year > 0 ? Model.Year.ToString() : "N/A")
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="spec-card">
+                            <div class="spec-label">
+                                <i class="bi bi-percent"></i>ABV
+                            </div>
+                            <div class="spec-value">@Model.AlcoholPercentage%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <div class="mb-5">
+                        <h4 class="brand-serif mb-3" style="font-size: 2rem; font-weight: 400;">
+                            <i class="bi bi-journal-text me-2" style="color: var(--warm-gold);"></i>
+                            Tasting Notes
+                        </h4>
+                        <div class="tasting-note">
+                            <p class="mb-0" style="font-size: 1.05rem; line-height: 1.8;">@Model.Description</p>
+                        </div>
+                    </div>
+                }
+
+                <div class="divider-gold my-5"></div>
+
+                <!-- CTA Section -->
+                <div class="text-center">
+                    <p class="text-muted mb-4" style="font-size: 1.05rem;">
+                        Interested in this wine? Request pricing and availability information
+                    </p>
+                    <a asp-controller="Home" 
+                       asp-action="Contact" 
+                       asp-route-wine="@Model.Name"
+                       asp-route-brand="@Model.Brand"
+                       asp-route-category="@Model.Category"
+                       asp-route-year="@Model.Year"
+                       asp-route-country="@Model.Country"
+                       class="btn btn-wine btn-lg" style="padding: 18px 50px;">
+                        <i class="bi bi-envelope me-2"></i>Request Quote
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
