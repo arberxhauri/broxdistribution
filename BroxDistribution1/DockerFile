@@ -2,17 +2,19 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
-# Copy solution and project files
+# Copy the solution file
 COPY BroxDistribution1.sln ./
-COPY BroxDistribution1/*.csproj ./BroxDistribution1/
+
+# Copy the project folder
+COPY BroxDistribution1/ ./BroxDistribution1/
 
 # Restore dependencies for the solution
-RUN dotnet restore
+RUN dotnet restore BroxDistribution1.sln
 
-# Copy the rest of the code
-COPY BroxDistribution1 ./BroxDistribution1
+# Copy the rest of the code (if any additional files)
+# (optional if everything is already copied)
 
-# Publish the project in Release mode
+# Build and publish the project
 WORKDIR /app/BroxDistribution1
 RUN dotnet publish -c Release -o /out
 
@@ -20,10 +22,10 @@ RUN dotnet publish -c Release -o /out
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
-# Copy published files from build stage
+# Copy the published app
 COPY --from=build /out .
 
-# Render requires port 10000
+# Expose Render port
 ENV ASPNETCORE_URLS=http://0.0.0.0:10000
 EXPOSE 10000
 
