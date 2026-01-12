@@ -2,30 +2,32 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
-# Copy csproj and restore dependencies
-COPY *.csproj ./
-RUN dotnet restore
+# Copy the solution file
+COPY BroxDistribution1.sln ./
 
-# Copy the rest of the code
-COPY . ./
+# Copy the project folder
+COPY BroxDistribution1/ ./BroxDistribution1/
 
-# Publish the app in Release mode
+# Restore dependencies for the solution
+RUN dotnet restore BroxDistribution1.sln
+
+# Copy the rest of the code (if any additional files)
+# (optional if everything is already copied)
+
+# Build and publish the project
+WORKDIR /app/BroxDistribution1
 RUN dotnet publish -c Release -o /out
 
 # -------- Runtime Stage --------
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
-# Copy published files from build stage
+# Copy the published app
 COPY --from=build /out .
 
-# Set Render's required listening port
+# Expose Render port
 ENV ASPNETCORE_URLS=http://0.0.0.0:10000
 EXPOSE 10000
 
-# Optional: configure SQL Server connection string via environment variable
-# You will set this in Render's dashboard under "Environment"
-# Example:
-# ENV ConnectionStrings__DefaultConnection="Server=<your-server>;Database=<your-db>;User Id=<user>;Password=<password>"
-
+# Start the app
 ENTRYPOINT ["dotnet", "BroxDistribution1.dll"]
