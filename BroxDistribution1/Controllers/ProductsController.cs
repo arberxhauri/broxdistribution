@@ -1,44 +1,43 @@
-using System.Linq;
-using BroxDistribution;
+// Controllers/ProductsController.cs
+using BroxDistribution.Models;
+using BroxDistribution.Repositories;
+using BroxDistribution1.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace BroxDistribution.Controllers
 {
     public class ProductsController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly WineRepository _wineRepository;
 
-        public ProductsController(ApplicationDbContext context)
+        public ProductsController(WineRepository wineRepository)
         {
-            _context = context;
+            _wineRepository = wineRepository;
         }
 
         public async Task<IActionResult> Index(string search)
         {
-            var wines = from w in _context.Wines
-                select w;
+            var wines = await _wineRepository.GetActiveWinesAsync();
 
             if (!string.IsNullOrEmpty(search))
             {
-                wines = wines.Where(w => 
-                    w.Name.Contains(search) ||
-                    w.Brand.Contains(search) ||
-                    w.Category.Contains(search) ||
-                    w.Country.Contains(search) ||
-                    w.Region.Contains(search) ||
-                    w.Grape.Contains(search)
+                wines = wines.Where(w =>
+                    w.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    w.Brand.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    w.Category.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    w.Country.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    w.Region.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    w.Grape.Contains(search, StringComparison.OrdinalIgnoreCase)
                 );
             }
 
-            return View(await wines.ToListAsync());
+            return View(wines.ToList());
         }
 
-
-        public IActionResult Details(int id)
+        public async Task<IActionResult> Details(int id)
         {
-            var wine = _context.Wines.Find(id);
-            if (wine == null)
+            var wine = await _wineRepository.GetByIdAsync(id);
+            if (wine == null || wine.IsDeleted)
                 return NotFound();
 
             return View(wine);

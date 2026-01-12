@@ -1,0 +1,50 @@
+[
+  {
+    "Id": 1,
+    "Name": "Cabernet Sauvignon Reserve",
+    "Brand": "Ch\u00E2teau Example",
+    "Category": "Red Wine",
+    "Country": "France",
+    "Region": "Bordeaux",
+    "Grape": "Cabernet Sauvignon",
+    "Year": 2020,
+    "AlcoholPercentage": 14.5,
+    "Price": 45.99,
+    "ImageUrl": "/images/wines/817e88a6-f551-4faf-9306-7fcd8629c7fe.webp",
+    "Description": "Full-bodied red with rich tannins and notes of blackcurrant",
+    "IsDeleted": false,
+    "DeletedAt": null
+  },
+  {
+    "Id": 2,
+    "Name": "Chardonnay Grand Cru",
+    "Brand": "Domaine Pierre",
+    "Category": "White Wine",
+    "Country": "France",
+    "Region": "Burgundy",
+    "Grape": "Chardonnay",
+    "Year": 2021,
+    "AlcoholPercentage": 13.0,
+    "Price": 38.50,
+    "ImageUrl": "/images/wines/chardonnay.jpg",
+    "Description": "Elegant white wine with citrus and oak aromas",
+    "IsDeleted": false,
+    "DeletedAt": null
+  },
+  {
+    "Id": 3,
+    "Name": "Prosecco DOC",
+    "Brand": "Villa Sandi",
+    "Category": "Sparkling Wine",
+    "Country": "Italy",
+    "Region": "Veneto",
+    "Grape": "Glera",
+    "Year": 2022,
+    "AlcoholPercentage": 11.0,
+    "Price": 18.99,
+    "ImageUrl": "/images/wines/prosecco.jpg",
+    "Description": "Fresh and fruity sparkling wine with floral notes",
+    "IsDeleted": false,
+    "DeletedAt": null
+  }
+]

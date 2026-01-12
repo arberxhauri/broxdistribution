@@ -1,7 +1,9 @@
+// Controllers/HomeController.cs
 using System.Net;
-using System.Net.Mail;
 using System.Text;
 using BroxDistribution.Models;
+using BroxDistribution.Repositories;
+using BroxDistribution1.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -9,13 +11,18 @@ namespace BroxDistribution.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly SmtpSettings _smtp;
-        private readonly ApplicationDbContext _context;
+        private readonly GraphMailSettings _mail;
+        private readonly ContactRepository _contactRepository;
+        private readonly IEmailService _emailService;
 
-        public HomeController(IOptions<SmtpSettings> smtpOptions, ApplicationDbContext context)
+        public HomeController(
+            IOptions<GraphMailSettings> mailOptions,
+            ContactRepository contactRepository,
+            IEmailService emailService)
         {
-            _smtp = smtpOptions.Value;
-            _context = context;
+            _mail = mailOptions.Value;
+            _contactRepository = contactRepository;
+            _emailService = emailService;
         }
 
         [HttpGet]
@@ -29,7 +36,7 @@ namespace BroxDistribution.Controllers
         public IActionResult Contact(string? wine, string? brand, string? category, int? year, string? country)
         {
             var model = new ContactForm();
-            
+
             // Pre-fill wine information if coming from a wine details page
             if (!string.IsNullOrEmpty(wine))
             {
@@ -48,7 +55,7 @@ namespace BroxDistribution.Controllers
                 if (year.HasValue) descriptionBuilder.AppendLine($"Vintage: {year}");
                 if (!string.IsNullOrEmpty(country)) descriptionBuilder.AppendLine($"Country: {country}");
                 descriptionBuilder.AppendLine("\nPlease provide pricing and availability information.\n\nAdditional details:\n");
-                
+
                 model.Description = descriptionBuilder.ToString();
             }
 
@@ -60,13 +67,12 @@ namespace BroxDistribution.Controllers
         public async Task<IActionResult> Contact(ContactForm model)
         {
             ModelState.Remove("ReplyMessage");
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
 
-            // ⭐ VALIDATE SMTP SETTINGS
-            if (string.IsNullOrEmpty(_smtp.User) || string.IsNullOrEmpty(_smtp.ContactToEmail))
+            if (!ModelState.IsValid)
+                return View(model);
+
+            // Validate Graph mail settings
+            if (string.IsNullOrWhiteSpace(_mail.SenderUpn) || string.IsNullOrWhiteSpace(_mail.AdminToEmail))
             {
                 ModelState.AddModelError("", "Email configuration error. Please contact the administrator.");
                 return View(model);
@@ -74,45 +80,58 @@ namespace BroxDistribution.Controllers
 
             try
             {
-                // Save to database
+                // Save to JSON file
                 model.SubmittedAt = DateTime.UtcNow;
-                _context.ContactForms.Add(model);
-                await _context.SaveChangesAsync();
+                await _contactRepository.AddAsync(model);
 
-                // Send email to admin
-                SendAdminEmail(model);
-
-                // Send confirmation email to user
-                SendConfirmationEmail(model);
+                // Send email to admin + confirmation to user (Graph, not SMTP)
+                await SendAdminEmailAsync(model);
+                await SendConfirmationEmailAsync(model);
 
                 TempData["SuccessMessage"] = "Thank you for contacting Brox Distribution. We will get back to you shortly.";
                 return RedirectToAction("ContactSuccess");
             }
             catch (Exception ex)
             {
-                // Log the actual error for debugging
                 Console.WriteLine($"Error: {ex.Message}");
                 Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-        
+
                 ModelState.AddModelError("", "There was a problem sending your message. Please try again later.");
                 return View(model);
             }
         }
-
 
         public IActionResult ContactSuccess()
         {
             return View();
         }
 
-        private void SendAdminEmail(ContactForm model)
+        private async Task SendAdminEmailAsync(ContactForm model)
         {
-            var fromAddress = new MailAddress(_smtp.User, "Brox Distribution Website");
-            var toAddress = new MailAddress(_smtp.ContactToEmail);
-
-            var subject = model.WineName != null 
-                ? $"Wine Inquiry: {model.WineName}" 
+            var subject = model.WineName != null
+                ? $"Wine Inquiry: {model.WineName}"
                 : "New Contact Form Submission";
+
+            var html = BuildAdminEmailHtml(model);
+
+            await _emailService.SendEmailAsync(_mail.AdminToEmail, subject, html);
+        }
+
+        private async Task SendConfirmationEmailAsync(ContactForm model)
+        {
+            var subject = "Thank you for contacting Brox Distribution";
+
+            var html = BuildConfirmationEmailHtml(model);
+
+            await _emailService.SendEmailAsync(model.Email, subject, html);
+        }
+
+        private static string BuildAdminEmailHtml(ContactForm model)
+        {
+            // Minimal hardening: HTML-encode user input so the email can’t be injected with raw HTML.
+            string Enc(string? s) => WebUtility.HtmlEncode(s ?? "");
+
+            var subjectHeader = "New Contact Form Submission";
 
             var bodyBuilder = new StringBuilder();
             bodyBuilder.AppendLine("<!DOCTYPE html>");
@@ -127,74 +146,61 @@ namespace BroxDistribution.Controllers
             bodyBuilder.AppendLine(".message-box { background: #fff; padding: 20px; margin-top: 20px; border: 1px solid #ddd; }");
             bodyBuilder.AppendLine("</style></head><body>");
             bodyBuilder.AppendLine("<div class='container'>");
-            bodyBuilder.AppendLine("<div class='header'><h2>New Contact Form Submission</h2></div>");
+            bodyBuilder.AppendLine($"<div class='header'><h2>{subjectHeader}</h2></div>");
             bodyBuilder.AppendLine("<div class='content'>");
 
             // Contact Information
             bodyBuilder.AppendLine("<h3 style='color: #1c1c1e;'>Contact Information</h3>");
-            bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Name:</span> {model.Name}</div>");
-            bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Email:</span> <a href='mailto:{model.Email}'>{model.Email}</a></div>");
-            
+            bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Name:</span> {Enc(model.Name)}</div>");
+            bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Email:</span> <a href='mailto:{Enc(model.Email)}'>{Enc(model.Email)}</a></div>");
+
             if (!string.IsNullOrEmpty(model.PhoneNumber))
-                bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Phone:</span> {model.PhoneNumber}</div>");
-            
+                bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Phone:</span> {Enc(model.PhoneNumber)}</div>");
+
             if (!string.IsNullOrEmpty(model.Company))
-                bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Company:</span> {model.Company}</div>");
+                bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Company:</span> {Enc(model.Company)}</div>");
 
             // Wine Information (if applicable)
             if (!string.IsNullOrEmpty(model.WineName))
             {
                 bodyBuilder.AppendLine("<div class='wine-info'>");
                 bodyBuilder.AppendLine("<h3 style='color: #FF5722; margin-top: 0;'>Wine Inquiry</h3>");
-                bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Wine:</span> {model.WineName}</div>");
-                
+                bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Wine:</span> {Enc(model.WineName)}</div>");
+
                 if (!string.IsNullOrEmpty(model.WineBrand))
-                    bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Producer:</span> {model.WineBrand}</div>");
-                
+                    bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Producer:</span> {Enc(model.WineBrand)}</div>");
+
                 if (!string.IsNullOrEmpty(model.WineCategory))
-                    bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Category:</span> {model.WineCategory}</div>");
-                
+                    bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Category:</span> {Enc(model.WineCategory)}</div>");
+
                 if (model.WineYear.HasValue)
                     bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Vintage:</span> {model.WineYear}</div>");
-                
+
                 if (!string.IsNullOrEmpty(model.WineCountry))
-                    bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Country:</span> {model.WineCountry}</div>");
-                
+                    bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Country:</span> {Enc(model.WineCountry)}</div>");
+
                 bodyBuilder.AppendLine("</div>");
             }
 
             // Message
             bodyBuilder.AppendLine("<div class='message-box'>");
             bodyBuilder.AppendLine("<h3 style='color: #1c1c1e; margin-top: 0;'>Message</h3>");
-            bodyBuilder.AppendLine($"<p>{model.Description.Replace("\n", "<br/>")}</p>");
+
+            // keep newlines but encode
+            var safeDescription = Enc(model.Description).Replace("\n", "<br/>");
+            bodyBuilder.AppendLine($"<p>{safeDescription}</p>");
             bodyBuilder.AppendLine("</div>");
 
             // Timestamp
             bodyBuilder.AppendLine($"<p style='margin-top: 20px; color: #666; font-size: 12px;'>Submitted at: {model.SubmittedAt:yyyy-MM-dd HH:mm:ss} UTC</p>");
 
             bodyBuilder.AppendLine("</div></div></body></html>");
-
-            using (var message = new MailMessage(fromAddress, toAddress))
-            {
-                message.Subject = subject;
-                message.Body = bodyBuilder.ToString();
-                message.IsBodyHtml = true;
-
-                using (var smtpClient = new SmtpClient(_smtp.Host, _smtp.Port))
-                {
-                    smtpClient.EnableSsl = _smtp.EnableSsl;
-                    smtpClient.Credentials = new NetworkCredential(_smtp.User, _smtp.Pass);
-                    smtpClient.Send(message);
-                }
-            }
+            return bodyBuilder.ToString();
         }
 
-        private void SendConfirmationEmail(ContactForm model)
+        private static string BuildConfirmationEmailHtml(ContactForm model)
         {
-            var fromAddress = new MailAddress(_smtp.User, "Brox Distribution");
-            var toAddress = new MailAddress(model.Email, model.Name);
-
-            var subject = "Thank you for contacting Brox Distribution";
+            string Enc(string? s) => WebUtility.HtmlEncode(s ?? "");
 
             var bodyBuilder = new StringBuilder();
             bodyBuilder.AppendLine("<!DOCTYPE html>");
@@ -207,7 +213,7 @@ namespace BroxDistribution.Controllers
             bodyBuilder.AppendLine(".footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }");
             bodyBuilder.AppendLine("</style></head><body>");
             bodyBuilder.AppendLine("<div class='container'>");
-            
+
             // Header
             bodyBuilder.AppendLine("<div class='header'>");
             bodyBuilder.AppendLine("<h1 style='margin: 0; font-size: 28px;'>BROX DISTRIBUTION</h1>");
@@ -216,7 +222,7 @@ namespace BroxDistribution.Controllers
 
             // Content
             bodyBuilder.AppendLine("<div class='content'>");
-            bodyBuilder.AppendLine($"<h2 style='color: #1c1c1e;'>Thank you, {model.Name}!</h2>");
+            bodyBuilder.AppendLine($"<h2 style='color: #1c1c1e;'>Thank you, {Enc(model.Name)}!</h2>");
             bodyBuilder.AppendLine("<p>We have received your inquiry and our team will review it shortly.</p>");
 
             // Wine summary if applicable
@@ -224,17 +230,17 @@ namespace BroxDistribution.Controllers
             {
                 bodyBuilder.AppendLine("<div class='wine-summary'>");
                 bodyBuilder.AppendLine("<h3 style='color: #FF5722; margin-top: 0;'>Your Wine Inquiry</h3>");
-                bodyBuilder.AppendLine($"<p style='font-size: 18px; margin: 10px 0;'><strong>{model.WineName}</strong></p>");
-                
+                bodyBuilder.AppendLine($"<p style='font-size: 18px; margin: 10px 0;'><strong>{Enc(model.WineName)}</strong></p>");
+
                 if (!string.IsNullOrEmpty(model.WineBrand))
-                    bodyBuilder.AppendLine($"<p style='margin: 5px 0;'>Producer: {model.WineBrand}</p>");
-                
+                    bodyBuilder.AppendLine($"<p style='margin: 5px 0;'>Producer: {Enc(model.WineBrand)}</p>");
+
                 if (!string.IsNullOrEmpty(model.WineCategory))
-                    bodyBuilder.AppendLine($"<p style='margin: 5px 0;'>Category: {model.WineCategory}</p>");
-                
+                    bodyBuilder.AppendLine($"<p style='margin: 5px 0;'>Category: {Enc(model.WineCategory)}</p>");
+
                 if (model.WineYear.HasValue)
                     bodyBuilder.AppendLine($"<p style='margin: 5px 0;'>Vintage: {model.WineYear}</p>");
-                
+
                 bodyBuilder.AppendLine("</div>");
             }
 
@@ -249,20 +255,7 @@ namespace BroxDistribution.Controllers
             bodyBuilder.AppendLine("</div>");
 
             bodyBuilder.AppendLine("</div></body></html>");
-
-            using (var message = new MailMessage(fromAddress, toAddress))
-            {
-                message.Subject = subject;
-                message.Body = bodyBuilder.ToString();
-                message.IsBodyHtml = true;
-
-                using (var smtpClient = new SmtpClient(_smtp.Host, _smtp.Port))
-                {
-                    smtpClient.EnableSsl = _smtp.EnableSsl;
-                    smtpClient.Credentials = new NetworkCredential(_smtp.User, _smtp.Pass);
-                    smtpClient.Send(message);
-                }
-            }
+            return bodyBuilder.ToString();
         }
     }
 }

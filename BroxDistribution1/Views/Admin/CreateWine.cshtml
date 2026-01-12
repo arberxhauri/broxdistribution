@@ -20,7 +20,7 @@
 <div class="row">
     <div class="col-lg-8">
         <div class="glass-card p-4">
-            <form asp-action="CreateWine" method="post">
+            <form asp-action="CreateWine" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
 
                 <div class="row g-3">
@@ -40,11 +40,11 @@
                         <label asp-for="Category" class="form-label"></label>
                         <select asp-for="Category" class="form-select">
                             <option value="">Select Category</option>
-                            <option value="Red">Red</option>
-                            <option value="White">White</option>
-                            <option value="Rosé">Rosé</option>
-                            <option value="Sparkling">Sparkling</option>
-                            <option value="Dessert">Dessert</option>
+                            <option value="Red Wine">Red Wine</option>
+                            <option value="White Wine">White Wine</option>
+                            <option value="Rosé Wine">Rosé Wine</option>
+                            <option value="Sparkling Wine">Sparkling Wine</option>
+                            <option value="Dessert Wine">Dessert Wine</option>
                         </select>
                         <span asp-validation-for="Category" class="text-danger small"></span>
                     </div>
@@ -86,10 +86,9 @@
                     </div>
 
                     <div class="col-12">
-                        <label asp-for="ImageUrl" class="form-label"></label>
-                        <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
-                        <span asp-validation-for="ImageUrl" class="text-danger small"></span>
-                        <small class="text-muted">Use Unsplash or other free image URLs</small>
+                        <label for="ImageFile" class="form-label">Wine Image</label>
+                        <input type="file" name="ImageFile" id="ImageFile" class="form-control" accept="image/*" />
+                        <small class="text-muted">Accepted formats: JPG, PNG, WEBP (Max 5MB)</small>
                     </div>
 
                     <div class="col-12">
@@ -115,9 +114,19 @@
 
     <div class="col-lg-4">
         <div class="glass-card p-4">
+            <h5 class="brand-serif mb-3">Image Preview</h5>
+            <div id="imagePreviewContainer" class="text-center p-5 mb-3" style="background: var(--soft-cream); border: 1px solid var(--light-gray);">
+                <i class="bi bi-wine-glass display-4 text-muted"></i>
+                <p class="small text-muted mt-2">No image selected</p>
+            </div>
+            <img id="previewImg" src="" alt="Preview" class="w-100 d-none mb-3" style="max-height: 300px; object-fit: contain; background: white; padding: 20px; border: 1px solid var(--light-gray);" />
+        </div>
+
+        <div class="glass-card p-4 mt-3">
             <h5 class="brand-serif mb-3">Quick Tips</h5>
             <ul class="small text-muted" style="line-height: 2;">
                 <li>Use high-quality wine bottle images</li>
+                <li>Images are saved locally in wwwroot/images/wines/</li>
                 <li>Fill all fields for best display</li>
                 <li>Description should be 100-200 characters</li>
             </ul>
@@ -127,4 +136,41 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Image preview
+        document.getElementById('ImageFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const previewImg = document.getElementById('previewImg');
+
+            if (file) {
+                // Validate file size
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Image size must be less than 5MB');
+                    this.value = '';
+                    return;
+                }
+
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Invalid file type. Please use JPG, PNG, WEBP, or GIF');
+                    this.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    previewImg.classList.remove('d-none');
+                    previewContainer.classList.add('d-none');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewImg.classList.add('d-none');
+                previewContainer.classList.remove('d-none');
+            }
+        });
+    </script>
 }
