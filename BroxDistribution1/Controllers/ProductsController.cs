@@ -30,6 +30,15 @@ namespace BroxDistribution.Controllers
                     w.Grape.Contains(search, StringComparison.OrdinalIgnoreCase)
                 );
             }
+            
+            ViewData["Title"] = "Wine Portfolio | Premium Wine Collection | Brox Distribution";
+            ViewData["MetaDescription"] =
+                "Browse our curated wine portfolio featuring premium selections from top regions and producers. Filter wines by name, grape, country or category.";
+            ViewData["OgTitle"] = "Brox Distribution - Wine Portfolio";
+            ViewData["OgDescription"] =
+                "Discover exceptional wines from our premium portfolio for HoReCa and retail partners.";
+            ViewData["OgType"] = "website";
+
 
             return View(wines.ToList());
         }
@@ -39,6 +48,17 @@ namespace BroxDistribution.Controllers
             var wine = await _wineRepository.GetByIdAsync(id);
             if (wine == null || wine.IsDeleted)
                 return NotFound();
+            
+            var regionOrCountry = !string.IsNullOrEmpty(wine.Region) ? wine.Region : wine.Country;
+
+            ViewData["Title"] = $"{wine.Name} {(wine.Year > 0 ? wine.Year.ToString() : "")} | {regionOrCountry} Wine | Brox Distribution";
+            ViewData["MetaDescription"] =
+                $"{wine.Name} by {wine.Brand} – {wine.Category} wine from {regionOrCountry}. {(!string.IsNullOrEmpty(wine.Description) ? wine.Description[..Math.Min(150, wine.Description.Length)] : "Discover this premium wine.")}";
+            ViewData["OgTitle"] = $"{wine.Name} | {wine.Brand}";
+            ViewData["OgDescription"] =
+                $"{wine.Category} wine from {regionOrCountry}. {wine.Brand} – {wine.Year} vintage.";
+            ViewData["OgType"] = "product";
+            ViewData["OgImage"] = wine.ImageUrl;
 
             return View(wine);
         }

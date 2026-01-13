@@ -28,7 +28,13 @@ namespace BroxDistribution.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            ViewData["Title"] = "Brox Distribution - Fine Wines";
+            ViewData["Title"] = "Premium Wine Distribution in Albania | Brox Distribution";
+            ViewData["MetaDescription"] =
+                "Discover premium wine distribution for HoReCa, retail and logistics in the UK and Albania with Brox Distribution.";
+            ViewData["OgTitle"] = "Brox Distribution - Premium Wine Selection";
+            ViewData["OgDescription"] =
+                "Expert wine distribution for hotels, restaurants and retail. Discover exceptional wines from world-renowned estates.";
+            ViewData["OgType"] = "website";
             return View();
         }
 

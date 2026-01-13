@@ -122,3 +122,26 @@
         </div>
     </div>
 </div>
+
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "Product",
+  "name": "@Model.Name",
+  "description": "@Html.Raw(System.Net.WebUtility.HtmlEncode(Model.Description ?? ""))",
+  "image": "@Model.ImageUrl",
+  "brand": {
+    "@@type": "Brand",
+    "name": "@Model.Brand"
+  },
+  "category": "@Model.Category",
+  "productionDate": "@(Model.Year > 0 ? Model.Year.ToString() : "")",
+  "countryOfOrigin": "@Model.Country",
+  "offers": {
+    "@@type": "Offer",
+    "availability": "https://schema.org/InStock",
+    "price": "0",
+    "priceCurrency": "GBP"
+  }
+}
+</script>

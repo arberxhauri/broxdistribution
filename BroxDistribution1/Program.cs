@@ -5,6 +5,7 @@ using BroxDistribution1.Models;
 using BroxDistribution1.Repositories;
 using BroxDistribution1.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +58,38 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+
+// SEO: Generate sitemap.xml dynamically
+app.MapGet("/sitemap.xml", async (HttpContext context) =>
+{
+    var sb = new StringBuilder();
+    sb.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+    sb.AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
+
+    // Static pages
+    var staticPages = new[]
+    {
+        ("/",          1.0, "weekly"),
+        ("/Products",  0.9, "daily"),
+        ("/Home/Contact", 0.8, "monthly")
+    };
+
+    foreach (var (url, priority, changefreq) in staticPages)
+    {
+        sb.AppendLine("  <url>");
+        sb.AppendLine($"    <loc>https://broxdistribution.co.uk{url}</loc>");
+        sb.AppendLine($"    <priority>{priority}</priority>");
+        sb.AppendLine($"    <changefreq>{changefreq}</changefreq>");
+        sb.AppendLine("  </url>");
+    }
+
+    sb.AppendLine("</urlset>");
+
+    context.Response.ContentType = "application/xml";
+    await context.Response.WriteAsync(sb.ToString());
+});
+
 
 app.Run();
 

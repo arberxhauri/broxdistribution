@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /Account/
+Disallow: /account/
+Disallow: /login/
+Disallow: /register/
+Disallow: /api/
+
+Sitemap: https://broxdistribution.co.uk/sitemap.xml

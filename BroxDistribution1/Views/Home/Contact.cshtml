@@ -5,6 +5,16 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     var hasWineInfo = !string.IsNullOrEmpty(Model?.WineName);
 }
+@{
+    ViewData["Title"] = "Contact Brox Distribution | Wine Orders & Support";
+    ViewData["MetaDescription"] =
+        "Contact Brox Distribution for wine orders, quotes and distribution enquiries. Email info@broxdistribution.co.uk or call +44 7899 31864.";
+    ViewData["OgTitle"] = "Contact Brox Distribution";
+    ViewData["OgDescription"] =
+        "Get in touch with Brox Distribution for premium wine supply and logistics.";
+    ViewData["OgType"] = "website";
+}
+
 
 <!-- Contact Hero -->
 <section class="contact-hero">
