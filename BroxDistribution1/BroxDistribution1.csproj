@@ -21,4 +21,11 @@
       <Folder Include="wwwroot\images\wines\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Update="googled0b9dd5cfa1a68d6.html">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </Content>
+    </ItemGroup>
+
 </Project>
