@@ -1,7 +1,6 @@
 // Controllers/ProductsController.cs
 using BroxDistribution.Models;
 using BroxDistribution.Repositories;
-using BroxDistribution1.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BroxDistribution.Controllers
@@ -15,22 +14,22 @@ namespace BroxDistribution.Controllers
             _wineRepository = wineRepository;
         }
 
-        public async Task<IActionResult> Index(string search)
+        public async Task<IActionResult> Index(string? search)
         {
             var wines = await _wineRepository.GetActiveWinesAsync();
 
-            if (!string.IsNullOrEmpty(search))
+            if (!string.IsNullOrWhiteSpace(search))
             {
                 wines = wines.Where(w =>
-                    w.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    w.Brand.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    w.Category.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    w.Country.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    w.Region.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    w.Grape.Contains(search, StringComparison.OrdinalIgnoreCase)
+                    (w.Name ?? "").Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    (w.Brand ?? "").Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    (w.Category ?? "").Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    (w.Country ?? "").Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    (w.Region ?? "").Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    (w.Grape ?? "").Contains(search, StringComparison.OrdinalIgnoreCase)
                 );
             }
-            
+
             ViewData["Title"] = "Wine Portfolio | Premium Wine Collection | Brox Distribution";
             ViewData["MetaDescription"] =
                 "Browse our curated wine portfolio featuring premium selections from top regions and producers. Filter wines by name, grape, country or category.";
@@ -38,7 +37,6 @@ namespace BroxDistribution.Controllers
             ViewData["OgDescription"] =
                 "Discover exceptional wines from our premium portfolio for HoReCa and retail partners.";
             ViewData["OgType"] = "website";
-
 
             return View(wines.ToList());
         }
@@ -48,7 +46,7 @@ namespace BroxDistribution.Controllers
             var wine = await _wineRepository.GetByIdAsync(id);
             if (wine == null || wine.IsDeleted)
                 return NotFound();
-            
+
             var regionOrCountry = !string.IsNullOrEmpty(wine.Region) ? wine.Region : wine.Country;
 
             ViewData["Title"] = $"{wine.Name} {(wine.Year > 0 ? wine.Year.ToString() : "")} | {regionOrCountry} Wine | Brox Distribution";
@@ -58,7 +56,7 @@ namespace BroxDistribution.Controllers
             ViewData["OgDescription"] =
                 $"{wine.Category} wine from {regionOrCountry}. {wine.Brand} – {wine.Year} vintage.";
             ViewData["OgType"] = "product";
-            ViewData["OgImage"] = wine.ImageUrl;
+            ViewData["OgImage"] = wine.ImageUrl; // will be /media/wines/... for uploads
 
             return View(wine);
         }

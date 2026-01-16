@@ -43,7 +43,6 @@ namespace BroxDistribution.Controllers
         {
             var model = new ContactForm();
 
-            // Pre-fill wine information if coming from a wine details page
             if (!string.IsNullOrEmpty(wine))
             {
                 model.WineName = wine;
@@ -52,7 +51,6 @@ namespace BroxDistribution.Controllers
                 model.WineYear = year;
                 model.WineCountry = country;
 
-                // Pre-fill the description with wine details
                 var descriptionBuilder = new StringBuilder();
                 descriptionBuilder.AppendLine("I am interested in the following wine:\n");
                 descriptionBuilder.AppendLine($"Wine: {wine}");
@@ -77,7 +75,6 @@ namespace BroxDistribution.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Validate Graph mail settings
             if (string.IsNullOrWhiteSpace(_mail.SenderUpn) || string.IsNullOrWhiteSpace(_mail.AdminToEmail))
             {
                 ModelState.AddModelError("", "Email configuration error. Please contact the administrator.");
@@ -86,11 +83,9 @@ namespace BroxDistribution.Controllers
 
             try
             {
-                // Save to JSON file
                 model.SubmittedAt = DateTime.UtcNow;
                 await _contactRepository.AddAsync(model);
 
-                // Send email to admin + confirmation to user (Graph, not SMTP)
                 await SendAdminEmailAsync(model);
                 await SendConfirmationEmailAsync(model);
 
@@ -107,10 +102,7 @@ namespace BroxDistribution.Controllers
             }
         }
 
-        public IActionResult ContactSuccess()
-        {
-            return View();
-        }
+        public IActionResult ContactSuccess() => View();
 
         private async Task SendAdminEmailAsync(ContactForm model)
         {
@@ -119,22 +111,18 @@ namespace BroxDistribution.Controllers
                 : "New Contact Form Submission";
 
             var html = BuildAdminEmailHtml(model);
-
             await _emailService.SendEmailAsync(_mail.AdminToEmail, subject, html);
         }
 
         private async Task SendConfirmationEmailAsync(ContactForm model)
         {
             var subject = "Thank you for contacting Brox Distribution";
-
             var html = BuildConfirmationEmailHtml(model);
-
             await _emailService.SendEmailAsync(model.Email, subject, html);
         }
 
         private static string BuildAdminEmailHtml(ContactForm model)
         {
-            // Minimal hardening: HTML-encode user input so the email can’t be injected with raw HTML.
             string Enc(string? s) => WebUtility.HtmlEncode(s ?? "");
 
             var subjectHeader = "New Contact Form Submission";
@@ -155,7 +143,6 @@ namespace BroxDistribution.Controllers
             bodyBuilder.AppendLine($"<div class='header'><h2>{subjectHeader}</h2></div>");
             bodyBuilder.AppendLine("<div class='content'>");
 
-            // Contact Information
             bodyBuilder.AppendLine("<h3 style='color: #1c1c1e;'>Contact Information</h3>");
             bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Name:</span> {Enc(model.Name)}</div>");
             bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Email:</span> <a href='mailto:{Enc(model.Email)}'>{Enc(model.Email)}</a></div>");
@@ -166,7 +153,6 @@ namespace BroxDistribution.Controllers
             if (!string.IsNullOrEmpty(model.Company))
                 bodyBuilder.AppendLine($"<div class='field'><span class='field-label'>Company:</span> {Enc(model.Company)}</div>");
 
-            // Wine Information (if applicable)
             if (!string.IsNullOrEmpty(model.WineName))
             {
                 bodyBuilder.AppendLine("<div class='wine-info'>");
@@ -188,19 +174,16 @@ namespace BroxDistribution.Controllers
                 bodyBuilder.AppendLine("</div>");
             }
 
-            // Message
             bodyBuilder.AppendLine("<div class='message-box'>");
             bodyBuilder.AppendLine("<h3 style='color: #1c1c1e; margin-top: 0;'>Message</h3>");
 
-            // keep newlines but encode
             var safeDescription = Enc(model.Description).Replace("\n", "<br/>");
             bodyBuilder.AppendLine($"<p>{safeDescription}</p>");
             bodyBuilder.AppendLine("</div>");
 
-            // Timestamp
             bodyBuilder.AppendLine($"<p style='margin-top: 20px; color: #666; font-size: 12px;'>Submitted at: {model.SubmittedAt:yyyy-MM-dd HH:mm:ss} UTC</p>");
-
             bodyBuilder.AppendLine("</div></div></body></html>");
+
             return bodyBuilder.ToString();
         }
 
@@ -220,18 +203,15 @@ namespace BroxDistribution.Controllers
             bodyBuilder.AppendLine("</style></head><body>");
             bodyBuilder.AppendLine("<div class='container'>");
 
-            // Header
             bodyBuilder.AppendLine("<div class='header'>");
             bodyBuilder.AppendLine("<h1 style='margin: 0; font-size: 28px;'>BROX DISTRIBUTION</h1>");
             bodyBuilder.AppendLine("<p style='margin: 10px 0 0 0; font-size: 14px; letter-spacing: 2px;'>PREMIUM WINE DISTRIBUTION</p>");
             bodyBuilder.AppendLine("</div>");
 
-            // Content
             bodyBuilder.AppendLine("<div class='content'>");
             bodyBuilder.AppendLine($"<h2 style='color: #1c1c1e;'>Thank you, {Enc(model.Name)}!</h2>");
             bodyBuilder.AppendLine("<p>We have received your inquiry and our team will review it shortly.</p>");
 
-            // Wine summary if applicable
             if (!string.IsNullOrEmpty(model.WineName))
             {
                 bodyBuilder.AppendLine("<div class='wine-summary'>");
@@ -254,10 +234,9 @@ namespace BroxDistribution.Controllers
             bodyBuilder.AppendLine("<p style='margin-top: 30px;'>Best regards,<br/><strong>The Brox Distribution Team</strong></p>");
             bodyBuilder.AppendLine("</div>");
 
-            // Footer
             bodyBuilder.AppendLine("<div class='footer'>");
             bodyBuilder.AppendLine("<p>Brox Distribution | London, UK</p>");
-            bodyBuilder.AppendLine("<p>Email: info@broxdistribution.com | Phone: +44 7899 313864</p>");
+            bodyBuilder.AppendLine("<p>Email: info@broxdistribution.co.uk | Phone: +44 7899 313864</p>");
             bodyBuilder.AppendLine("</div>");
 
             bodyBuilder.AppendLine("</div></body></html>");

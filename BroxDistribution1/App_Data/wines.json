@@ -10,10 +10,10 @@
     "Year": 2020,
     "AlcoholPercentage": 14.5,
     "Price": 45.99,
-    "ImageUrl": "/images/wines/817e88a6-f551-4faf-9306-7fcd8629c7fe.webp",
+    "ImageUrl": "/media/wines/5b341994-60fa-43fe-821a-6fc01bdfd9dd.webp",
     "Description": "Full-bodied red with rich tannins and notes of blackcurrant",
-    "IsDeleted": false,
-    "DeletedAt": null
+    "IsDeleted": true,
+    "DeletedAt": "2026-01-16T23:24:22.12259+01:00"
   },
   {
     "Id": 2,
@@ -28,8 +28,8 @@
     "Price": 38.50,
     "ImageUrl": "/images/wines/chardonnay.jpg",
     "Description": "Elegant white wine with citrus and oak aromas",
-    "IsDeleted": false,
-    "DeletedAt": null
+    "IsDeleted": true,
+    "DeletedAt": "2026-01-16T23:24:23.97008+01:00"
   },
   {
     "Id": 3,
@@ -44,7 +44,7 @@
     "Price": 18.99,
     "ImageUrl": "/images/wines/prosecco.jpg",
     "Description": "Fresh and fruity sparkling wine with floral notes",
-    "IsDeleted": false,
-    "DeletedAt": null
+    "IsDeleted": true,
+    "DeletedAt": "2026-01-16T23:24:25.840352+01:00"
   }
 ]

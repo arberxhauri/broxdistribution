@@ -21,4 +21,8 @@
       <_ContentIncludedByDefault Remove="wwwroot\images\banner.png" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include="wwwroot\images\banner.png" />
+    </ItemGroup>
+
 </Project>

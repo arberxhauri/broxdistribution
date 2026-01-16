@@ -1,7 +1,6 @@
 // Controllers/AdminController.cs
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using BroxDistribution1.Models;
 using BroxDistribution1.ViewModel;
 using BroxDistribution1.Services;
 using System.Security.Claims;
@@ -9,9 +8,9 @@ using BroxDistribution.Models;
 using BroxDistribution.Repositories;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using BroxDistribution1.Repositories;
 using System.Net;
-
+using BroxDistribution1.Repositories;
+using Microsoft.AspNetCore.Hosting;
 
 namespace BroxDistribution.Controllers
 {
@@ -21,27 +20,59 @@ namespace BroxDistribution.Controllers
         private readonly WineRepository _wineRepository;
         private readonly ContactRepository _contactRepository;
         private readonly IEmailService _emailService;
+        private readonly IWebHostEnvironment _env;
 
         public AdminController(
             AdminRepository adminRepository,
             WineRepository wineRepository,
             ContactRepository contactRepository,
-            IEmailService emailService)
+            IEmailService emailService,
+            IWebHostEnvironment env)
         {
             _adminRepository = adminRepository;
             _wineRepository = wineRepository;
             _contactRepository = contactRepository;
             _emailService = emailService;
+            _env = env;
+        }
+
+        // -------------------- Public image endpoints (App_Data) --------------------
+
+        // Wine images: /media/wines/{file}
+        [AllowAnonymous]
+        [HttpGet("/media/wines/{file}")]
+        public IActionResult WineImage(string file)
+        {
+            file = SafeFileName(file);
+            if (string.IsNullOrWhiteSpace(file)) return NotFound();
+
+            var path = Path.Combine(_env.ContentRootPath, "App_Data", "images", "wines", file);
+            if (!System.IO.File.Exists(path)) return NotFound();
+
+            return PhysicalFile(path, GetMimeType(path));
+        }
+
+        // General images if you want (banner etc) in App_Data/images: /media/{file}
+        [AllowAnonymous]
+        [HttpGet("/media/{file}")]
+        public IActionResult SiteImage(string file)
+        {
+            file = SafeFileName(file);
+            if (string.IsNullOrWhiteSpace(file)) return NotFound();
+
+            var path = Path.Combine(_env.ContentRootPath, "App_Data", "images", file);
+            if (!System.IO.File.Exists(path)) return NotFound();
+
+            return PhysicalFile(path, GetMimeType(path));
         }
 
         // GET: Admin/Login
         [HttpGet]
         public IActionResult Login()
         {
-            if (User.Identity.IsAuthenticated)
-            {
+            if (User.Identity?.IsAuthenticated == true)
                 return RedirectToAction(nameof(Dashboard));
-            }
+
             return View();
         }
 
@@ -51,9 +82,7 @@ namespace BroxDistribution.Controllers
         public async Task<IActionResult> Login(AdminLoginViewModel model)
         {
             if (!ModelState.IsValid)
-            {
                 return View(model);
-            }
 
             var admin = await _adminRepository.GetByUsernameAsync(model.Username);
 
@@ -63,11 +92,9 @@ namespace BroxDistribution.Controllers
                 return View(model);
             }
 
-            // Update last login
             admin.LastLoginAt = DateTime.Now;
             await _adminRepository.UpdateAsync(admin);
 
-            // Create claims
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, admin.Username),
@@ -80,7 +107,9 @@ namespace BroxDistribution.Controllers
             var authProperties = new AuthenticationProperties
             {
                 IsPersistent = model.RememberMe,
-                ExpiresUtc = model.RememberMe ? DateTimeOffset.UtcNow.AddDays(30) : DateTimeOffset.UtcNow.AddHours(1)
+                ExpiresUtc = model.RememberMe
+                    ? DateTimeOffset.UtcNow.AddDays(30)
+                    : DateTimeOffset.UtcNow.AddHours(1)
             };
 
             await HttpContext.SignInAsync(
@@ -134,32 +163,21 @@ namespace BroxDistribution.Controllers
         {
             var wines = await _wineRepository.GetAllAsync();
 
-            // Filter by deleted status
-            if (showDeleted)
-            {
-                wines = wines.Where(w => w.IsDeleted);
-            }
-            else
-            {
-                wines = wines.Where(w => !w.IsDeleted);
-            }
+            wines = showDeleted
+                ? wines.Where(w => w.IsDeleted)
+                : wines.Where(w => !w.IsDeleted);
 
-            // Search filter
             if (!string.IsNullOrWhiteSpace(search))
             {
                 wines = wines.Where(w =>
-                    w.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    w.Brand.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    w.Description.Contains(search, StringComparison.OrdinalIgnoreCase));
+                    (w.Name ?? "").Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    (w.Brand ?? "").Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    (w.Description ?? "").Contains(search, StringComparison.OrdinalIgnoreCase));
             }
 
-            // Category filter
             if (!string.IsNullOrWhiteSpace(category))
-            {
                 wines = wines.Where(w => w.Category == category);
-            }
 
-            // Sorting
             wines = sortBy switch
             {
                 "Name" => sortOrder == "asc" ? wines.OrderBy(w => w.Name) : wines.OrderByDescending(w => w.Name),
@@ -171,29 +189,23 @@ namespace BroxDistribution.Controllers
                 _ => wines.OrderBy(w => w.Name)
             };
 
-            // Get total count for pagination
             var totalItems = wines.Count();
             var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-
-            // Ensure page is within valid range
             page = Math.Max(1, Math.Min(page, totalPages > 0 ? totalPages : 1));
 
-            // Get paginated results
             var paginatedWines = wines
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
 
-            // Get distinct categories for filter dropdown
             var allWinesForCategories = await _wineRepository.GetAllAsync();
             var categories = allWinesForCategories
                 .Where(w => !string.IsNullOrEmpty(w.Category))
-                .Select(w => w.Category)
+                .Select(w => w.Category!)
                 .Distinct()
                 .OrderBy(c => c)
                 .ToList();
 
-            // Pass data to view
             ViewBag.ShowDeleted = showDeleted;
             ViewBag.SortBy = sortBy;
             ViewBag.SortOrder = sortOrder;
@@ -210,38 +222,29 @@ namespace BroxDistribution.Controllers
 
         // GET: Admin/CreateWine
         [Authorize(Roles = "Admin")]
-        public IActionResult CreateWine()
-        {
-            return View();
-        }
+        public IActionResult CreateWine() => View();
 
+        // POST: Admin/CreateWine
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateWine(Wine wine, IFormFile ImageFile)
+        public async Task<IActionResult> CreateWine(Wine wine, IFormFile? ImageFile)
         {
-            if (ModelState.IsValid)
-            {
-                // Handle image upload
-                if (ImageFile != null && ImageFile.Length > 0)
-                {
-                    var imageUrl = await SaveImageAsync(ImageFile);
-                    if (imageUrl != null)
-                    {
-                        wine.ImageUrl = imageUrl;
-                    }
-                }
-                else
-                {
-                    // Set default image if no image uploaded
-                    wine.ImageUrl = "/images/wines/default-wine.jpg";
-                }
+            if (!ModelState.IsValid)
+                return View(wine);
 
-                await _wineRepository.AddAsync(wine);
-                TempData["Success"] = "Wine added successfully!";
-                return RedirectToAction(nameof(Wines));
+            if (ImageFile != null && ImageFile.Length > 0)
+            {
+                var imageUrl = await SaveWineImageAsync(ImageFile);
+                if (imageUrl != null)
+                    wine.ImageUrl = imageUrl;
             }
-            return View(wine);
+
+            wine.ImageUrl ??= "/images/wines/default-wine.jpg"; // default stays in wwwroot
+
+            await _wineRepository.AddAsync(wine);
+            TempData["Success"] = "Wine added successfully!";
+            return RedirectToAction(nameof(Wines));
         }
 
         // GET: Admin/EditWine/5
@@ -249,48 +252,51 @@ namespace BroxDistribution.Controllers
         public async Task<IActionResult> EditWine(int id)
         {
             var wine = await _wineRepository.GetByIdAsync(id);
-            if (wine == null)
-            {
-                return NotFound();
-            }
+            if (wine == null) return NotFound();
             return View(wine);
         }
 
-        // Update EditWine method
+        // POST: Admin/EditWine/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> EditWine(int id, Wine wine, IFormFile ImageFile)
+        public async Task<IActionResult> EditWine(int id, Wine wine, IFormFile? ImageFile)
         {
-            if (id != wine.Id)
+            if (id != wine.Id) return NotFound();
+            if (!ModelState.IsValid) return View(wine);
+
+            // Load existing so you don't lose ImageUrl if the form doesn't post it
+            var existing = await _wineRepository.GetByIdAsync(id);
+            if (existing == null) return NotFound();
+
+            // Update fields (copy what you allow editing)
+            existing.Name = wine.Name;
+            existing.Brand = wine.Brand;
+            existing.Category = wine.Category;
+            existing.Country = wine.Country;
+            existing.Region = wine.Region;
+            existing.Grape = wine.Grape;
+            existing.Year = wine.Year;
+            existing.Price = wine.Price;
+            existing.Description = wine.Description;
+            existing.IsDeleted = wine.IsDeleted; // optional; or keep your delete/restore only
+            existing.DeletedAt = wine.DeletedAt;
+
+            if (ImageFile != null && ImageFile.Length > 0)
             {
-                return NotFound();
+                // delete old App_Data image if it was one of ours
+                DeleteWineImageIfOwned(existing.ImageUrl);
+
+                var imageUrl = await SaveWineImageAsync(ImageFile);
+                if (imageUrl != null)
+                    existing.ImageUrl = imageUrl;
             }
 
-            if (ModelState.IsValid)
-            {
-                // Handle image upload if new image provided
-                if (ImageFile != null && ImageFile.Length > 0)
-                {
-                    // Delete old image if it exists and is not the default
-                    if (!string.IsNullOrEmpty(wine.ImageUrl) && 
-                        wine.ImageUrl != "/images/wines/default-wine.jpg")
-                    {
-                        DeleteImage(wine.ImageUrl);
-                    }
+            existing.ImageUrl ??= "/images/wines/default-wine.jpg";
 
-                    var imageUrl = await SaveImageAsync(ImageFile);
-                    if (imageUrl != null)
-                    {
-                        wine.ImageUrl = imageUrl;
-                    }
-                }
-
-                await _wineRepository.UpdateAsync(wine);
-                TempData["Success"] = "Wine updated successfully!";
-                return RedirectToAction(nameof(Wines));
-            }
-            return View(wine);
+            await _wineRepository.UpdateAsync(existing);
+            TempData["Success"] = "Wine updated successfully!";
+            return RedirectToAction(nameof(Wines));
         }
 
         // POST: Admin/DeleteWine/5
@@ -344,16 +350,10 @@ namespace BroxDistribution.Controllers
         public async Task<IActionResult> ContactDetails(int id)
         {
             var contact = await _contactRepository.GetByIdAsync(id);
-            if (contact == null)
-            {
-                return NotFound();
-            }
+            if (contact == null) return NotFound();
 
-            // Mark as read
             if (!contact.IsRead)
-            {
                 await _contactRepository.MarkAsReadAsync(id);
-            }
 
             return View(contact);
         }
@@ -365,10 +365,7 @@ namespace BroxDistribution.Controllers
         public async Task<IActionResult> ReplyContact(int id, string replyMessage)
         {
             var contact = await _contactRepository.GetByIdAsync(id);
-            if (contact == null)
-            {
-                return NotFound();
-            }
+            if (contact == null) return NotFound();
 
             if (string.IsNullOrWhiteSpace(replyMessage))
             {
@@ -378,31 +375,32 @@ namespace BroxDistribution.Controllers
 
             try
             {
-                // Send email
-                var subject = $"Re: Your inquiry - Brox Distribution";
+                var subject = "Re: Your inquiry - Brox Distribution";
+
+                string safeReply = WebUtility.HtmlEncode(replyMessage).Replace("\n", "<br>");
+                string safeOriginal = WebUtility.HtmlEncode(contact.Description ?? "").Replace("\n", "<br>");
+
                 var emailBody = $@"
-                    <html>
-                    <body style='font-family: Arial, sans-serif;'>
-                        <h2 style='color: #1c1c1e;'>Hello {contact.Name},</h2>
-                        <p>Thank you for contacting Brox Distribution. Here's our response to your inquiry:</p>
-                        <div style='background: #faf8f5; padding: 20px; border-left: 4px solid #FF5722; margin: 20px 0;'>
-                            {WebUtility.HtmlEncode(replyMessage).Replace("\n", "<br>")}
-                        </div>
-                        <p><strong>Your original message:</strong></p>
-                        <p style='color: #666;'>{contact.Description}</p>
-                        <hr style='border: none; border-top: 1px solid #e8e6e3; margin: 20px 0;'>
-                        <p style='color: #999; font-size: 12px;'>
-                            Best regards,<br>
-                            Brox Distribution Team<br>
-                            <a href='mailto:info@broxdistribution.com'>info@broxdistribution.com</a>
-                        </p>
-                    </body>
-                    </html>
-                ";
+<html>
+<body style='font-family: Arial, sans-serif;'>
+  <h2 style='color: #1c1c1e;'>Hello {WebUtility.HtmlEncode(contact.Name)},</h2>
+  <p>Thank you for contacting Brox Distribution. Here's our response to your inquiry:</p>
+  <div style='background: #faf8f5; padding: 20px; border-left: 4px solid #FF5722; margin: 20px 0;'>
+    {safeReply}
+  </div>
+  <p><strong>Your original message:</strong></p>
+  <p style='color: #666;'>{safeOriginal}</p>
+  <hr style='border: none; border-top: 1px solid #e8e6e3; margin: 20px 0;'>
+  <p style='color: #999; font-size: 12px;'>
+    Best regards,<br>
+    Brox Distribution Team<br>
+    <a href='mailto:info@broxdistribution.co.uk'>info@broxdistribution.co.uk</a>
+  </p>
+</body>
+</html>";
 
                 await _emailService.SendEmailAsync(contact.Email, subject, emailBody);
 
-                // Update contact form
                 contact.IsReplied = true;
                 contact.RepliedAt = DateTime.Now;
                 contact.ReplyMessage = replyMessage;
@@ -428,76 +426,94 @@ namespace BroxDistribution.Controllers
             TempData["Success"] = "Contact deleted successfully!";
             return RedirectToAction(nameof(Contacts));
         }
-        
-        private async Task<string> SaveImageAsync(IFormFile imageFile)
-{
-    try
-    {
-        // Validate file
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
-        var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
-        
-        if (!allowedExtensions.Contains(extension))
-        {
-            TempData["Error"] = "Invalid image format. Allowed: JPG, PNG, WEBP, GIF";
-            return null;
-        }
 
-        if (imageFile.Length > 5 * 1024 * 1024) // 5MB limit
-        {
-            TempData["Error"] = "Image size must be less than 5MB";
-            return null;
-        }
+        // -------------------- Image helpers (App_Data) --------------------
 
-        // Create unique filename
-        var fileName = $"{Guid.NewGuid()}{extension}";
-        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "images", "wines");
-        
-        // Ensure directory exists
-        if (!Directory.Exists(uploadsFolder))
-        {
-            Directory.CreateDirectory(uploadsFolder);
-        }
-
-        var filePath = Path.Combine(uploadsFolder, fileName);
-
-        // Save file
-        using (var fileStream = new FileStream(filePath, FileMode.Create))
-        {
-            await imageFile.CopyToAsync(fileStream);
-        }
-
-        // Return relative URL
-        return $"/images/wines/{fileName}";
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error saving image: {ex.Message}");
-        TempData["Error"] = "Failed to save image";
-        return null;
-    }
-}
-
-        private void DeleteImage(string imageUrl)
+        private async Task<string?> SaveWineImageAsync(IFormFile imageFile)
         {
             try
             {
-                if (string.IsNullOrEmpty(imageUrl) || imageUrl == "/images/wines/default-wine.jpg")
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+                var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+
+                if (!allowedExtensions.Contains(extension))
+                {
+                    TempData["Error"] = "Invalid image format. Allowed: JPG, PNG, WEBP, GIF";
+                    return null;
+                }
+
+                if (imageFile.Length > 5 * 1024 * 1024)
+                {
+                    TempData["Error"] = "Image size must be less than 5MB";
+                    return null;
+                }
+
+                var fileName = $"{Guid.NewGuid()}{extension}";
+
+                var uploadsFolder = Path.Combine(_env.ContentRootPath, "App_Data", "images", "wines");
+                Directory.CreateDirectory(uploadsFolder);
+
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await imageFile.CopyToAsync(fileStream);
+                }
+
+                // IMPORTANT: Return the controller URL, not /images/...
+                return $"/media/wines/{fileName}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving image: {ex.Message}");
+                TempData["Error"] = "Failed to save image";
+                return null;
+            }
+        }
+
+        private void DeleteWineImageIfOwned(string? imageUrl)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(imageUrl)) return;
+
+                // Only delete images stored in App_Data via our /media/wines route
+                // Example: /media/wines/abc.jpg
+                if (!imageUrl.StartsWith("/media/wines/", StringComparison.OrdinalIgnoreCase))
                     return;
 
                 var fileName = Path.GetFileName(imageUrl);
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "images", "wines", fileName);
+                fileName = SafeFileName(fileName);
+                if (string.IsNullOrWhiteSpace(fileName)) return;
+
+                var filePath = Path.Combine(_env.ContentRootPath, "App_Data", "images", "wines", fileName);
 
                 if (System.IO.File.Exists(filePath))
-                {
                     System.IO.File.Delete(filePath);
-                    Console.WriteLine($"Deleted image: {fileName}");
-                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error deleting image: {ex.Message}");
             }
+        }
+
+        private static string SafeFileName(string input)
+        {
+            // Prevent path traversal like ../../etc/passwd
+            return Path.GetFileName(input ?? "").Trim();
+        }
+
+        private static string GetMimeType(string path)
+        {
+            var ext = Path.GetExtension(path).ToLowerInvariant();
+            return ext switch
+            {
+                ".png" => "image/png",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".webp" => "image/webp",
+                ".gif" => "image/gif",
+                _ => "application/octet-stream"
+            };
         }
     }
 }
