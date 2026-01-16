@@ -256,8 +256,8 @@ namespace BroxDistribution.Controllers
 
             // Footer
             bodyBuilder.AppendLine("<div class='footer'>");
-            bodyBuilder.AppendLine("<p>Brox Distribution | Tirana, Albania</p>");
-            bodyBuilder.AppendLine("<p>Email: info@broxdistribution.com | Phone: +355 XX XXX XXX</p>");
+            bodyBuilder.AppendLine("<p>Brox Distribution | London, UK</p>");
+            bodyBuilder.AppendLine("<p>Email: info@broxdistribution.com | Phone: +44 7899 313864</p>");
             bodyBuilder.AppendLine("</div>");
 
             bodyBuilder.AppendLine("</div></body></html>");

@@ -18,7 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="wwwroot\images\wines\" />
+      <_ContentIncludedByDefault Remove="wwwroot\images\banner.png" />
     </ItemGroup>
 
 </Project>

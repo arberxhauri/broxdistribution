@@ -394,7 +394,7 @@ namespace BroxDistribution.Controllers
                         <p style='color: #999; font-size: 12px;'>
                             Best regards,<br>
                             Brox Distribution Team<br>
-                            <a href='mailto:admin@broxdistribution.com'>admin@broxdistribution.com</a>
+                            <a href='mailto:info@broxdistribution.com'>info@broxdistribution.com</a>
                         </p>
                     </body>
                     </html>
@@ -451,7 +451,7 @@ namespace BroxDistribution.Controllers
 
         // Create unique filename
         var fileName = $"{Guid.NewGuid()}{extension}";
-        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "wines");
+        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "images", "wines");
         
         // Ensure directory exists
         if (!Directory.Exists(uploadsFolder))
@@ -486,7 +486,7 @@ namespace BroxDistribution.Controllers
                     return;
 
                 var fileName = Path.GetFileName(imageUrl);
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "wines", fileName);
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "images", "wines", fileName);
 
                 if (System.IO.File.Exists(filePath))
                 {

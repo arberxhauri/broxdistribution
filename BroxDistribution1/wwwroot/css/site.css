@@ -325,23 +325,23 @@ main {
   flex-shrink: 0 !important; /* Never shrink */
 }
 
-@media (min-width: 576px) {
-  .hero-buttons {
-    flex-direction: row !important;
-  }
+/*@media (min-width: 576px) {*/
+/*  .hero-buttons {*/
+/*    flex-direction: row !important;*/
+/*  }*/
 
-  .hero-btn {
-    flex: 0 1 180px !important; /* Fixed width on larger screens */
-    max-width: 220px;
-  }
-}
+/*  .hero-btn {*/
+/*    flex: 0 1 180px !important; !* Fixed width on larger screens *!*/
+/*    max-width: 220px;*/
+/*  }*/
+/*}*/
 
-@media (max-width: 575.98px) {
-  .hero-btn {
-    width: 220px !important;
-    max-width: none !important;
-  }
-}
+/*@media (max-width: 575.98px) {*/
+/*  .hero-btn {*/
+/*    width: 220px !important;*/
+/*    max-width: none !important;*/
+/*  }*/
+/*}*/
 
 
 
@@ -963,6 +963,7 @@ main {
   .hero-wine .lead {
     font-size: 1rem !important;
     max-width: 90vw;
+    padding: 0 !important;
   }
 
   .hero-wine .btn {
@@ -972,22 +973,22 @@ main {
   }
 }
 
-@media (max-width: 576px) {
-  .wine-card-image {
-    height: 450px;
-  }
+/*@media (max-width: 576px) {*/
+/*  .wine-card-image {*/
+/*    height: 450px;*/
+/*  }*/
 
-  .wine-card-image img {
-    padding: 20px;
-  }
+/*  .wine-card-image img {*/
+/*    padding: 20px;*/
+/*  }*/
 
-  .wine-card-body {
-    padding: 20px;
-  }
-}
+/*  .wine-card-body {*/
+/*    padding: 20px;*/
+/*  }*/
+/*}*/
 
 @media (max-width: 480px) {
   .hero-wine .lead {
-    display: none !important;
+    padding: 0 0 !important;
   }
 }
