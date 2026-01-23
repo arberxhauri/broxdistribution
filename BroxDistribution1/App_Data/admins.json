@@ -1,10 +1,2 @@
 [
-  {
-    "Id": 1,
-    "Username": "admin",
-    "PasswordHash": "$2a$11$UlaPI.DffUmqG9m.nxIRVuCwJZ.XPkvxApGGsZpUv9anqTez1osFK",
-    "Email": "admin@broxdistribution.com",
-    "CreatedAt": "2026-01-11T13:36:12.093193+01:00",
-    "LastLoginAt": "2026-01-16T22:56:45.844936+01:00"
-  }
 ]
