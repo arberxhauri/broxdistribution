@@ -134,7 +134,7 @@ async Task SeedInitialData(IServiceProvider services)
             {
                 Username = "admin",
                 Email = "admin@broxdistribution.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword('sZI6pk<"t:742qDw'),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("sZI6pk</t:742qDw"),
                 CreatedAt = DateTime.Now
             });
             Console.WriteLine("✅ Admin user created! Username: admin, Password: Admin@123");
