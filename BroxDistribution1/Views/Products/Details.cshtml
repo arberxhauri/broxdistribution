@@ -66,16 +66,19 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="spec-card">
-                            <div class="spec-label">
-                                <i class="bi bi-calendar3"></i>Vintage
+                    @if (Model.Year > 0)
+                    {
+                        <div class="col-md-3">
+                            <div class="spec-card">
+                                <div class="spec-label">
+                                    <i class="bi bi-calendar3"></i>Vintage
+                                </div>
+                                <div class="spec-value">
+                                    @(Model.Year > 0 ? Model.Year.ToString() : "N/A")
+                                </div>
                             </div>
-                            <div class="spec-value">
-                                @(Model.Year > 0 ? Model.Year.ToString() : "N/A")
-                            </div>
-                        </div>
-                    </div>
+                        </div>   
+                    }
                     <div class="col-md-3">
                         <div class="spec-card">
                             <div class="spec-label">

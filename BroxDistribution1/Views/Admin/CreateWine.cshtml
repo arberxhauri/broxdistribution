@@ -1,8 +1,8 @@
 @model BroxDistribution.Models.Wine
 
 @{
-    ViewData["Title"] = "Add New Wine";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+ViewData["Title"] = "Add New Wine";
+Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
 <div class="mb-4">
@@ -86,11 +86,11 @@
                     </div>
 
                     <div class="col-12">
-                        <label asp-for="Description" class="form-label"></label>
-                        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                        <label asp-for="Description" class="form-label">General Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="3" placeholder="General tasting notes or overview"></textarea>
                         <span asp-validation-for="Description" class="text-danger small"></span>
                     </div>
-                    
+
                     <div class="col-12">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <label class="form-label mb-0">Detailed Tasting Notes</label>
@@ -98,7 +98,7 @@
                                 <i class="bi bi-plus-circle me-1"></i>Add Field
                             </button>
                         </div>
-    
+
                         <div id="tastingNotesContainer">
                             <!-- Dynamic fields will be added here -->
                         </div>
@@ -144,70 +144,71 @@
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+<partial name="_ValidationScriptsPartial" />
 
-    <script>
-        // Image preview
-        document.getElementById('ImageFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const previewContainer = document.getElementById('imagePreviewContainer');
-            const previewImg = document.getElementById('previewImg');
+<script>
+    // Image preview functionality
+    document.getElementById('ImageFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const previewContainer = document.getElementById('imagePreviewContainer');
+        const previewImg = document.getElementById('previewImg');
 
-            if (file) {
-                // Validate file size
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('Image size must be less than 5MB');
-                    this.value = '';
-                    return;
-                }
-
-                // Validate file type
-                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-                if (!allowedTypes.includes(file.type)) {
-                    alert('Invalid file type. Please use JPG, PNG, WEBP, or GIF');
-                    this.value = '';
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewImg.src = e.target.result;
-                    previewImg.classList.remove('d-none');
-                    previewContainer.classList.add('d-none');
-                };
-                reader.readAsDataURL(file);
-            } else {
-                previewImg.classList.add('d-none');
-                previewContainer.classList.remove('d-none');
+        if (file) {
+            // Validate file size
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image size must be less than 5MB');
+                this.value = '';
+                return;
             }
-        });
-    </script>
-    
-    <script>
+
+            // Validate file type
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Invalid file type. Please use JPG, PNG, WEBP, or GIF');
+                this.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewImg.classList.remove('d-none');
+                previewContainer.classList.add('d-none');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            previewImg.classList.add('d-none');
+            previewContainer.classList.remove('d-none');
+        }
+    });
+</script>
+
+<script>
     let tastingNoteIndex = 0;
-    
-    // Common tasting note labels for quick selection
     const commonLabels = ['Color', 'Aroma', 'Flavor', 'Body', 'Tannins', 'Acidity', 'Finish', 'Food Pairing'];
-    
+
     function createTastingNoteField(label = '', value = '') {
         const id = tastingNoteIndex++;
-        const fieldHtml = `
-            <div class="tasting-note-field mb-3" data-id="${id}">
+        const container = document.getElementById('tastingNotesContainer');
+
+        const fieldDiv = document.createElement('div');
+        fieldDiv.className = 'tasting-note-field mb-3';
+        fieldDiv.setAttribute('data-id', id);
+
+        fieldDiv.innerHTML = `
                 <div class="row g-2">
                     <div class="col-md-3">
                         <input type="text" 
                                class="form-control tasting-label" 
                                placeholder="e.g., Color" 
                                value="${label}"
-                               list="labelSuggestions"
-                               required />
+                               list="labelSuggestions" />
                     </div>
                     <div class="col-md-8">
                         <input type="text" 
                                class="form-control tasting-value" 
                                placeholder="e.g., Deep ruby with purple rim" 
-                               value="${value}"
-                               required />
+                               value="${value}" />
                     </div>
                     <div class="col-md-1">
                         <button type="button" class="btn btn-outline-danger btn-sm remove-tasting-note w-100" data-id="${id}">
@@ -215,56 +216,73 @@
                         </button>
                     </div>
                 </div>
-            </div>
-        `;
-        
-        $('#tastingNotesContainer').append(fieldHtml);
+            `;
+
+        container.appendChild(fieldDiv);
+
+        // Add event listeners for the new field
+        const inputs = fieldDiv.querySelectorAll('.tasting-label, .tasting-value');
+        inputs.forEach(input => {
+            input.addEventListener('input', updateTastingNotesJson);
+        });
+
+        const removeBtn = fieldDiv.querySelector('.remove-tasting-note');
+        removeBtn.addEventListener('click', function() {
+            fieldDiv.style.transition = 'opacity 0.3s';
+            fieldDiv.style.opacity = '0';
+            setTimeout(() => {
+                fieldDiv.remove();
+                updateTastingNotesJson();
+            }, 300);
+        });
+
         updateTastingNotesJson();
     }
-    
+
     function updateTastingNotesJson() {
         const notes = [];
-        $('.tasting-note-field').each(function() {
-            const label = $(this).find('.tasting-label').val().trim();
-            const value = $(this).find('.tasting-value').val().trim();
+        const fields = document.querySelectorAll('.tasting-note-field');
+
+        fields.forEach(field => {
+            const label = field.querySelector('.tasting-label').value.trim();
+            const value = field.querySelector('.tasting-value').value.trim();
             if (label && value) {
                 notes.push({ label: label, value: value });
             }
         });
-        $('#tastingNotesJson').val(JSON.stringify(notes));
+
+        document.getElementById('tastingNotesJson').value = JSON.stringify(notes);
+        console.log('Updated tasting notes:', notes);
     }
-    
-    // Add field button
-    $('#addTastingNote').click(function(e) {
-        e.preventDefault();
-        createTastingNoteField();
-    });
-    
-    // Remove field button
-    $(document).on('click', '.remove-tasting-note', function(e) {
-        e.preventDefault();
-        const id = $(this).data('id');
-        $(`.tasting-note-field[data-id="${id}"]`).fadeOut(300, function() {
-            $(this).remove();
-            updateTastingNotesJson();
-        });
-    });
-    
-    // Update JSON on input change
-    $(document).on('input', '.tasting-label, .tasting-value', function() {
-        updateTastingNotesJson();
-    });
-    
-    // Load existing data (for Edit page)
-    $(document).ready(function() {
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Initializing tasting notes...');
+
         // Add datalist for label suggestions
-        $('body').append(`
-            <datalist id="labelSuggestions">
-                ${commonLabels.map(label => `<option value="${label}">`).join('')}
-            </datalist>
-        `);
-        
-        const existingJson = $('#tastingNotesJson').val();
+        const datalist = document.createElement('datalist');
+        datalist.id = 'labelSuggestions';
+        commonLabels.forEach(label => {
+            const option = document.createElement('option');
+            option.value = label;
+            datalist.appendChild(option);
+        });
+        document.body.appendChild(datalist);
+
+        // Add field button
+        const addButton = document.getElementById('addTastingNote');
+        if (addButton) {
+            addButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Add button clicked');
+                createTastingNoteField();
+            });
+        } else {
+            console.error('Add button not found!');
+        }
+
+        // Load existing data (for Edit page)
+        const existingJson = document.getElementById('tastingNotesJson').value;
         if (existingJson) {
             try {
                 const notes = JSON.parse(existingJson);
@@ -275,12 +293,11 @@
                 console.error('Failed to parse tasting notes:', e);
             }
         }
-        
+
         // Add initial field if none exist
-        if ($('.tasting-note-field').length === 0) {
+        if (document.querySelectorAll('.tasting-note-field').length === 0) {
             createTastingNoteField();
         }
     });
 </script>
-
 }
