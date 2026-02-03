@@ -16,6 +16,7 @@ namespace BroxDistribution.Controllers
 {
     public class AdminController : Controller
     {
+        private const string RenderAppDataPath = "/opt/render/project/src/App_Data";
         private readonly AdminRepository _adminRepository;
         private readonly WineRepository _wineRepository;
         private readonly ContactRepository _contactRepository;
@@ -35,6 +36,17 @@ namespace BroxDistribution.Controllers
             _emailService = emailService;
             _env = env;
         }
+        
+        private string AppDataRoot
+        {
+            get
+            {
+                if (Directory.Exists(RenderAppDataPath))
+                    return RenderAppDataPath;
+
+                return Path.Combine(_env.ContentRootPath, "App_Data");
+            }
+        }
 
         // -------------------- Public image endpoints (App_Data) --------------------
 
@@ -46,7 +58,7 @@ namespace BroxDistribution.Controllers
             file = SafeFileName(file);
             if (string.IsNullOrWhiteSpace(file)) return NotFound();
 
-            var path = Path.Combine(_env.ContentRootPath, "App_Data", "images", "wines", file);
+            var path = Path.Combine(AppDataRoot, "images", "wines", file);
             if (!System.IO.File.Exists(path)) return NotFound();
 
             return PhysicalFile(path, GetMimeType(path));
@@ -60,7 +72,7 @@ namespace BroxDistribution.Controllers
             file = SafeFileName(file);
             if (string.IsNullOrWhiteSpace(file)) return NotFound();
 
-            var path = Path.Combine(_env.ContentRootPath, "App_Data", "images", file);
+            var path = Path.Combine(AppDataRoot, "images", file);
             if (!System.IO.File.Exists(path)) return NotFound();
 
             return PhysicalFile(path, GetMimeType(path));
@@ -449,18 +461,17 @@ namespace BroxDistribution.Controllers
                 }
 
                 var fileName = $"{Guid.NewGuid()}{extension}";
-
-                var uploadsFolder = Path.Combine(_env.ContentRootPath, "App_Data", "images", "wines");
+                var uploadsFolder = Path.Combine(AppDataRoot, "images", "wines");
                 Directory.CreateDirectory(uploadsFolder);
 
                 var filePath = Path.Combine(uploadsFolder, fileName);
 
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
                     await imageFile.CopyToAsync(fileStream);
                 }
 
-                // IMPORTANT: Return the controller URL, not /images/...
+                // Store public URL in DB
                 return $"/media/wines/{fileName}";
             }
             catch (Exception ex)
@@ -477,16 +488,14 @@ namespace BroxDistribution.Controllers
             {
                 if (string.IsNullOrWhiteSpace(imageUrl)) return;
 
-                // Only delete images stored in App_Data via our /media/wines route
-                // Example: /media/wines/abc.jpg
+                // Only delete images stored via our /media/wines route
                 if (!imageUrl.StartsWith("/media/wines/", StringComparison.OrdinalIgnoreCase))
                     return;
 
-                var fileName = Path.GetFileName(imageUrl);
-                fileName = SafeFileName(fileName);
+                var fileName = SafeFileName(Path.GetFileName(imageUrl));
                 if (string.IsNullOrWhiteSpace(fileName)) return;
 
-                var filePath = Path.Combine(_env.ContentRootPath, "App_Data", "images", "wines", fileName);
+                var filePath = Path.Combine(AppDataRoot, "images", "wines", fileName);
 
                 if (System.IO.File.Exists(filePath))
                     System.IO.File.Delete(filePath);
