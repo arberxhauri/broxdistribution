@@ -143,9 +143,7 @@ async Task SeedInitialData(IServiceProvider services)
         {
             Console.WriteLine("ℹ️ Admin already exists, skipping...");
         }
-
-        // Seed Wines
-        Console.WriteLine("🍷 Getting WineRepository...");
+        
         var wineRepo = scopedServices.GetRequiredService<WineRepository>();
         
         Console.WriteLine("🍷 Calling GetAllAsync for wines...");
