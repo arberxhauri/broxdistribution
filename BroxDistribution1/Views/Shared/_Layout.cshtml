@@ -10,7 +10,7 @@
     <title>@(ViewData["Title"] ?? "Brox Distribution")</title>
 
     <meta name="description"
-          content="@(ViewData["MetaDescription"] ?? "Premium wine distribution for HoReCa, retail and logistics in the UK and Albania.")" />
+          content="@(ViewData["MetaDescription"] ?? "Premium wine distribution for HoReCa, retail and logistics in the UK.")" />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
 
     <link rel="canonical" href="@Context.Request.GetDisplayUrl().Split('?')[0]" />
@@ -20,7 +20,7 @@
     <meta property="og:description" content="@(ViewData["OgDescription"] ?? ViewData["MetaDescription"] ?? "Premium wine distribution.")" />
     <meta property="og:type" content="@(ViewData["OgType"] ?? "website")" />
     <meta property="og:url" content="@Context.Request.GetDisplayUrl()" />
-    <meta property="og:image" content="@(ViewData["OgImage"] ?? (Context.Request.Scheme + "://" + Context.Request.Host + "/lib/Images/logo.png"))" />
+    <meta property="og:image" content="@(ViewData["OgImage"] ?? (Context.Request.Scheme + "://" + Context.Request.Host + "/favicon-dark.ico"))" />
     <meta property="og:site_name" content="Brox Distribution" />
 
     <!-- Twitter -->
