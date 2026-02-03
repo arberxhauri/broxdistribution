@@ -4,25 +4,30 @@ namespace BroxDistribution1.Repositories
 {
     public class JsonFileRepository<T> where T : class
     {
+        private const string RenderAppDataPath = "/opt/render/project/src/App_Data";
+
         private readonly string _filePath;
         private static readonly SemaphoreSlim _fileLock = new SemaphoreSlim(1, 1);
 
         public JsonFileRepository(IWebHostEnvironment environment, string fileName)
         {
-            var dataFolder = Path.Combine(environment.ContentRootPath, "App_Data");
-            
+            // Use Render persistent disk if available, otherwise local App_Data
+            var dataFolder = Directory.Exists(RenderAppDataPath)
+                ? RenderAppDataPath
+                : Path.Combine(environment.ContentRootPath, "App_Data");
+
             Console.WriteLine($"🔧 Initializing {typeof(T).Name} repository");
             Console.WriteLine($"🔧 Data folder: {dataFolder}");
-            
+
             if (!Directory.Exists(dataFolder))
             {
                 Directory.CreateDirectory(dataFolder);
                 Console.WriteLine($"🔧 Created directory: {dataFolder}");
             }
-            
+
             _filePath = Path.Combine(dataFolder, fileName);
             Console.WriteLine($"🔧 File path: {_filePath}");
-            
+
             if (!File.Exists(_filePath))
             {
                 File.WriteAllText(_filePath, "[]");
