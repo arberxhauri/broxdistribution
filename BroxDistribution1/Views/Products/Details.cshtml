@@ -54,27 +54,8 @@
                 <h1 class="display-4 brand-serif mb-2" style="font-weight: 400;">@Model.Name</h1>
                 <p class="fs-4 text-muted mb-4" style="font-weight: 400;">@Model.Brand</p>
 
-                <!-- CTA Section - Moved Up -->
-                <div class="text-center mb-5 p-4" style="background: linear-gradient(135deg, rgba(133, 32, 50, 0.05), rgba(204, 153, 51, 0.05)); border-radius: 12px; border: 2px solid var(--warm-gold);">
-                    <p class="text-muted mb-3" style="font-size: 1rem; font-weight: 500;">
-                        <i class="bi bi-star-fill me-2" style="color: var(--warm-gold);"></i>Interested in this wine?
-                    </p>
-                    <a asp-controller="Home" 
-                       asp-action="Contact" 
-                       asp-route-wine="@Model.Name"
-                       asp-route-brand="@Model.Brand"
-                       asp-route-category="@Model.Category"
-                       asp-route-year="@Model.Year"
-                       asp-route-country="@Model.Country"
-                       class="btn btn-wine btn-lg" style="padding: 16px 40px;">
-                        <i class="bi bi-envelope me-2"></i>Request Quote
-                    </a>
-                </div>
-
-                <div class="divider-gold mb-5"></div>
-
                 <!-- Specifications Grid -->
-                <div class="row g-3 mb-5">
+                <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <div class="spec-card">
                             <div class="spec-label">
@@ -107,6 +88,25 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- CTA Section - Below Specifications -->
+                <div class="text-center mb-5 p-4" style="background: linear-gradient(135deg, rgba(133, 32, 50, 0.05), rgba(204, 153, 51, 0.05)); border-radius: 12px; border: 2px solid var(--warm-gold);">
+                    <p class="text-muted mb-3" style="font-size: 1rem; font-weight: 500;">
+                        <i class="bi bi-star-fill me-2" style="color: var(--warm-gold);"></i>Interested in this wine?
+                    </p>
+                    <a asp-controller="Home" 
+                       asp-action="Contact" 
+                       asp-route-wine="@Model.Name"
+                       asp-route-brand="@Model.Brand"
+                       asp-route-category="@Model.Category"
+                       asp-route-year="@Model.Year"
+                       asp-route-country="@Model.Country"
+                       class="btn btn-wine btn-lg" style="padding: 16px 40px;">
+                        <i class="bi bi-envelope me-2"></i>Request Quote
+                    </a>
+                </div>
+
+                <div class="divider-gold mb-5"></div>
 
                 <!-- Description -->
                 @if (!string.IsNullOrEmpty(Model.Description))
