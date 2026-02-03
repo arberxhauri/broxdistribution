@@ -251,12 +251,16 @@ namespace BroxDistribution.Controllers
                     wine.ImageUrl = imageUrl;
             }
 
-            wine.ImageUrl ??= "/images/wines/default-wine.jpg"; // default stays in wwwroot
+            wine.ImageUrl ??= "/images/wines/default-wine.jpg";
+
+            // TastingNotesJson is automatically bound from the hidden field
+            // Your repository will serialize it to wines.json
 
             await _wineRepository.AddAsync(wine);
             TempData["Success"] = "Wine added successfully!";
             return RedirectToAction(nameof(Wines));
         }
+
 
         // GET: Admin/EditWine/5
         [Authorize(Roles = "Admin")]
@@ -276,11 +280,10 @@ namespace BroxDistribution.Controllers
             if (id != wine.Id) return NotFound();
             if (!ModelState.IsValid) return View(wine);
 
-            // Load existing so you don't lose ImageUrl if the form doesn't post it
             var existing = await _wineRepository.GetByIdAsync(id);
             if (existing == null) return NotFound();
 
-            // Update fields (copy what you allow editing)
+            // Update all fields including the new TastingNotesJson
             existing.Name = wine.Name;
             existing.Brand = wine.Brand;
             existing.Category = wine.Category;
@@ -288,15 +291,15 @@ namespace BroxDistribution.Controllers
             existing.Region = wine.Region;
             existing.Grape = wine.Grape;
             existing.Year = wine.Year;
+            existing.AlcoholPercentage = wine.AlcoholPercentage; // Was missing!
             existing.Description = wine.Description;
-            existing.IsDeleted = wine.IsDeleted; // optional; or keep your delete/restore only
+            existing.TastingNotesJson = wine.TastingNotesJson; // New field
+            existing.IsDeleted = wine.IsDeleted;
             existing.DeletedAt = wine.DeletedAt;
 
             if (ImageFile != null && ImageFile.Length > 0)
             {
-                // delete old App_Data image if it was one of ours
                 DeleteWineImageIfOwned(existing.ImageUrl);
-
                 var imageUrl = await SaveWineImageAsync(ImageFile);
                 if (imageUrl != null)
                     existing.ImageUrl = imageUrl;

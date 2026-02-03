@@ -90,6 +90,21 @@
                         <textarea asp-for="Description" class="form-control" rows="4"></textarea>
                         <span asp-validation-for="Description" class="text-danger small"></span>
                     </div>
+                    
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <label class="form-label mb-0">Detailed Tasting Notes</label>
+                            <button type="button" class="btn btn-sm btn-outline-gold" id="addTastingNote">
+                                <i class="bi bi-plus-circle me-1"></i>Add Field
+                            </button>
+                        </div>
+    
+                        <div id="tastingNotesContainer">
+                            <!-- Dynamic fields will be added here -->
+                        </div>
+                        <input type="hidden" name="TastingNotesJson" id="tastingNotesJson" />
+                        <small class="text-muted">Add specific attributes like Color, Aroma, Flavor, Body, Finish, etc.</small>
+                    </div>
 
                     <div class="col-12">
                         <div class="d-flex gap-2">
@@ -167,4 +182,105 @@
             }
         });
     </script>
+    
+    <script>
+    let tastingNoteIndex = 0;
+    
+    // Common tasting note labels for quick selection
+    const commonLabels = ['Color', 'Aroma', 'Flavor', 'Body', 'Tannins', 'Acidity', 'Finish', 'Food Pairing'];
+    
+    function createTastingNoteField(label = '', value = '') {
+        const id = tastingNoteIndex++;
+        const fieldHtml = `
+            <div class="tasting-note-field mb-3" data-id="${id}">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <input type="text" 
+                               class="form-control tasting-label" 
+                               placeholder="e.g., Color" 
+                               value="${label}"
+                               list="labelSuggestions"
+                               required />
+                    </div>
+                    <div class="col-md-8">
+                        <input type="text" 
+                               class="form-control tasting-value" 
+                               placeholder="e.g., Deep ruby with purple rim" 
+                               value="${value}"
+                               required />
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-tasting-note w-100" data-id="${id}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('#tastingNotesContainer').append(fieldHtml);
+        updateTastingNotesJson();
+    }
+    
+    function updateTastingNotesJson() {
+        const notes = [];
+        $('.tasting-note-field').each(function() {
+            const label = $(this).find('.tasting-label').val().trim();
+            const value = $(this).find('.tasting-value').val().trim();
+            if (label && value) {
+                notes.push({ label: label, value: value });
+            }
+        });
+        $('#tastingNotesJson').val(JSON.stringify(notes));
+    }
+    
+    // Add field button
+    $('#addTastingNote').click(function(e) {
+        e.preventDefault();
+        createTastingNoteField();
+    });
+    
+    // Remove field button
+    $(document).on('click', '.remove-tasting-note', function(e) {
+        e.preventDefault();
+        const id = $(this).data('id');
+        $(`.tasting-note-field[data-id="${id}"]`).fadeOut(300, function() {
+            $(this).remove();
+            updateTastingNotesJson();
+        });
+    });
+    
+    // Update JSON on input change
+    $(document).on('input', '.tasting-label, .tasting-value', function() {
+        updateTastingNotesJson();
+    });
+    
+    // Load existing data (for Edit page)
+    $(document).ready(function() {
+        // Add datalist for label suggestions
+        $('body').append(`
+            <datalist id="labelSuggestions">
+                ${commonLabels.map(label => `<option value="${label}">`).join('')}
+            </datalist>
+        `);
+        
+        const existingJson = $('#tastingNotesJson').val();
+        if (existingJson) {
+            try {
+                const notes = JSON.parse(existingJson);
+                notes.forEach(note => {
+                    createTastingNoteField(note.label, note.value);
+                });
+            } catch (e) {
+                console.error('Failed to parse tasting notes:', e);
+            }
+        }
+        
+        // Add initial field if none exist
+        if ($('.tasting-note-field').length === 0) {
+            createTastingNoteField();
+        }
+    });
+</script>
+
 }

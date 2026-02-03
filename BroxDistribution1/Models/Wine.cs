@@ -34,6 +34,8 @@ namespace BroxDistribution.Models
 
         [StringLength(1024)]
         public string? Description { get; set; } // <-- nullable
+        
+        public string? TastingNotesJson { get; set; } 
 
         public bool IsDeleted { get; set; } = false;
         public DateTime? DeletedAt { get; set; }
