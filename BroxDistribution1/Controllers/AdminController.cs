@@ -197,7 +197,6 @@ namespace BroxDistribution.Controllers
                 "Category" => sortOrder == "asc" ? wines.OrderBy(w => w.Category) : wines.OrderByDescending(w => w.Category),
                 "Country" => sortOrder == "asc" ? wines.OrderBy(w => w.Country) : wines.OrderByDescending(w => w.Country),
                 "Year" => sortOrder == "asc" ? wines.OrderBy(w => w.Year) : wines.OrderByDescending(w => w.Year),
-                "Price" => sortOrder == "asc" ? wines.OrderBy(w => w.Price) : wines.OrderByDescending(w => w.Price),
                 _ => wines.OrderBy(w => w.Name)
             };
 
@@ -289,7 +288,6 @@ namespace BroxDistribution.Controllers
             existing.Region = wine.Region;
             existing.Grape = wine.Grape;
             existing.Year = wine.Year;
-            existing.Price = wine.Price;
             existing.Description = wine.Description;
             existing.IsDeleted = wine.IsDeleted; // optional; or keep your delete/restore only
             existing.DeletedAt = wine.DeletedAt;

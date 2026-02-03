@@ -24,13 +24,10 @@ namespace BroxDistribution.Models
         [StringLength(64)]
         public string Grape { get; set; }
 
-        public int Year { get; set; }
+        public int? Year { get; set; }
 
         [Range(0, 100)]
         public decimal AlcoholPercentage { get; set; }
-
-        [Range(0, 10000)]
-        public decimal Price { get; set; }
 
         [StringLength(256)]
         public string ImageUrl { get; set; }

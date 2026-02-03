@@ -286,21 +286,7 @@ else
                                 <i class="bi @GetSortIcon("Year", sortBy, sortOrder)" style="color: var(--warm-gold);"></i>
                             </a>
                         </th>
-                        <th>
-                            <a asp-action="Wines" 
-                               asp-route-showDeleted="@showDeleted" 
-                               asp-route-sortBy="Price" 
-                               asp-route-sortOrder="@GetNextSortOrder("Price", sortBy, sortOrder)"
-                               asp-route-page="1"
-                               asp-route-pageSize="@pageSize"
-                               asp-route-search="@search"
-                               asp-route-category="@category"
-                               class="text-decoration-none text-dark d-flex align-items-center gap-2"
-                               style="cursor: pointer;">
-                                Price
-                                <i class="bi @GetSortIcon("Price", sortBy, sortOrder)" style="color: var(--warm-gold);"></i>
-                            </a>
-                        </th>
+
                         <th style="width: 150px;">Actions</th>
                     </tr>
                 </thead>
@@ -325,7 +311,6 @@ else
                             <td><span class="badge badge-wine">@wine.Category</span></td>
                             <td>@wine.Country</td>
                             <td>@wine.Year</td>
-                            <td><strong>€@wine.Price.ToString("0.00")</strong></td>
                             <td>
                                 <div class="d-flex gap-2">
                                     @if (!showDeleted)
